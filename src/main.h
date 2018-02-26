@@ -38,19 +38,21 @@
   #define EPS_float 1E-6
   #define EPS_double 1E-14
 
-  #define HAVE_TM // flag for enable twisted mass
+  #define HAVE_TM      // flag for enable twisted mass
+  #define HAVE_TM1p1   // flag for enable doublet for twisted mass
+
   #undef INIT_ONE_PREC // flag undef for enabling additional features in the lib
   
-  #define FOR2( e ) { e e }
-  #define FOR3( e ) { e e e }
-  #define FOR4( e ) { e e e e }
-  #define FOR10( e ) { e e e e e  e e e e e }
-  #define FOR20( e ) { e e e e e  e e e e e  e e e e e  e e e e e  }
-  #define FOR40( e ) { e e e e e  e e e e e  e e e e e  e e e e e  e e e e e  e e e e e  e e e e e  e e e e e }
+  #define FOR2( e )  { e e }
+  #define FOR3( e )  { e e e }
+  #define FOR4( e )  { e e e e }
   #define FOR6( e )  { e e e  e e e }
+  #define FOR10( e ) { e e e e e  e e e e e }
   #define FOR12( e ) { e e e  e e e  e e e  e e e }
-  #define FOR24( e ) { e e e  e e e  e e e  e e e  e e e  e e e  e e e  e e e }
+  #define FOR20( e ) { FOR10( e ) FOR10( e )  }
+  #define FOR24( e ) { FOR12( e ) FOR12( e ) }
   #define FOR36( e ) { FOR12( e ) FOR12( e ) FOR12( e ) }
+  #define FOR40( e ) { FOR20( e ) FOR20( e ) }
   #define FOR42( e ) { FOR36( e ) FOR6( e ) }
   
   #define SQUARE( e ) (e)*(e)
@@ -73,12 +75,14 @@
   #define cimag_float cimagf
   #define csqrt_double csqrt
   #define csqrt_float csqrtf
+  #define sqrt_double sqrt
+  #define sqrt_float sqrtf
   #define cpow_double cpow
   #define cpow_float cpowf
   #define pow_double pow
   #define pow_float powf
-  #define abs_float fabs
-  #define abs_double abs
+  #define abs_double fabs
+  #define abs_float fabsf
   
 #ifdef SSE
   #define MALLOC( variable, kind, length ) do{ if ( variable != NULL ) { \
@@ -177,6 +181,7 @@
   #define DEBUGOUTPUT( A, FORMAT )
   #endif
 
+  #include "simd_vectorization_control.h"
   #include "vectorization_control.h"
   #include "threading.h"
 
@@ -185,7 +190,7 @@
   enum { _NO_DEFAULT_SET, _DEFAULT_SET };
   enum { _NO_REORDERING, _REORDER };
   enum { _ADD, _COPY };
-  enum { _ORDINARY, _SCHWARZ };
+  enum { _ORDINARY, _SCHWARZ, _ODDEVEN };
   enum { _RES, _NO_RES };
   enum { _STANDARD, _LIME }; //formats
   enum { _READ, _WRITE };
@@ -200,6 +205,7 @@
       _SM1, _SM2, _SM3, _SM4, _SMALL1, _SMALL2, _NUM_PROF }; // _NUM_PROF has always to be the last constant!
   enum { _VTS = 20 };
   enum { _TRCKD_VAL, _STP_TIME, _SLV_ITER, _SLV_TIME, _CRS_ITER, _CRS_TIME, _SLV_ERR, _CGNR_ERR, _NUM_OPTB };
+  enum { _SSE, _AVX };
   
   typedef struct block_struct {
     int start, color, no_comm, *bt;
@@ -297,6 +303,7 @@
     int *local_lattice;
     int *block_lattice;
     int num_eig_vect;
+    int num_parent_eig_vect;
     int coarsening[4];
     int global_splitting[4];
     int periodic_bc[4];
@@ -319,13 +326,7 @@
     long int schwarz_vector_size;
     int D_size;
     int clover_size;
-    // operator
-    double real_shift;
-    complex_double dirac_shift, even_shift, odd_shift;
-#ifdef HAVE_TM
     int block_size;
-    complex_double tm_shift, tm_even_shift, tm_odd_shift;
-#endif
     // buffer vectors
     vector_float vbuf_float[9], sbuf_float[2];
     vector_double vbuf_double[9], sbuf_double[2];
@@ -337,9 +338,7 @@
     
     // next coarser level
     struct level_struct *next_level;
-    
   } level_struct;
-
 
   typedef struct global_struct {
     
@@ -369,15 +368,21 @@
     // profiling, analysis, output
     int coarse_iter_count, iter_count, iterator, print, conf_flag, setup_flag, in_setup;
     double coarse_time, prec_time, *output_table[8], cur_storage, max_storage, total_time,
-      plaq_hopp, plaq_clov, norm_res, plaq, setup_m0, solve_m0, bicgstab_tol, twisted_bc[4],
-      test;
+      plaq_hopp, plaq_clov, norm_res, plaq, bicgstab_tol, twisted_bc[4], test;
+
+    double m0, setup_m0;
 
 #ifdef HAVE_TM
     // twisted mass parameters
     int downprop;
-    double tm_mu, setup_tm_mu, tm_mu_odd_shift, tm_mu_even_shift, *tm_mu_factor;
+    double mu, setup_mu, mu_odd_shift, mu_even_shift, *mu_factor;
 #endif
-           
+
+#ifdef HAVE_TM1p1           
+    int n_flavours;
+    double epsbar, epsbar_ig5_odd_shift, epsbar_ig5_even_shift, *epsbar_factor;
+#endif
+
     // index functions for external usage
     int (*conf_index_fct)(), (*vector_index_fct)();
     int *odd_even_table;
@@ -462,29 +467,19 @@
 // functions
 #include "clifford.h"
 
+#ifdef SIMD
+#include "simd_complex_float.h"
+#include "simd_complex_double.h"
+#include "simd_blas_float.h"
+#include "simd_blas_double.h"
+#endif
 #ifdef SSE
 #include "vectorization_dirac_float.h"
 #include "vectorization_dirac_double.h"
-#include "blas_vectorized.h"
-#include "sse_blas_vectorized.h"
 #include "sse_complex_float_intrinsic.h"
 #include "sse_complex_double_intrinsic.h"
-#include "sse_coarse_operator_float.h"
-#include "sse_coarse_operator_double.h"
-#include "sse_linalg_float.h"
-#include "sse_linalg_double.h"
-#include "sse_interpolation_float.h"
-#include "sse_interpolation_double.h"
-#include "sse_schwarz_float.h"
-#include "sse_schwarz_double.h"
-#else
-//no intrinsics
-#include "interpolation_float.h"
-#include "interpolation_double.h"
 #endif
 
-#include "data_float.h"
-#include "data_double.h"
 #include "data_layout.h"
 #include "io.h"
 #include "init.h"
@@ -500,6 +495,10 @@
 #include "linalg_double.h"
 #include "ghost_float.h"
 #include "ghost_double.h"
+#include "gram_schmidt_float.h"
+#include "gram_schmidt_double.h"
+#include "interpolation_float.h"
+#include "interpolation_double.h"
 #include "linsolve_float.h"
 #include "linsolve_double.h"
 #include "linsolve.h"
@@ -521,6 +520,8 @@
 #include "gathering_double.h"
 #include "coarse_operator_float.h"
 #include "coarse_operator_double.h"
+#include "coarse_coupling_float.h"
+#include "coarse_coupling_double.h"
 #include "coarse_oddeven_float.h"
 #include "coarse_oddeven_double.h"
 #include "var_table.h"
