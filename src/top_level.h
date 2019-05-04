@@ -24,9 +24,9 @@
   
 struct Thread;
   
-  void rhs_define( vector_double rhs, level_struct *l, struct Thread *threading );
-  int wilson_driver( vector_double solution, vector_double source, level_struct *l, struct Thread *threading );
-  void solve( vector_double solution, vector_double source, level_struct *l, struct Thread *threading );
+  void rhs_define( vector_double *rhs, level_struct *l, struct Thread *threading );
+  int wilson_driver( vector_double *solution, vector_double *source, level_struct *l, struct Thread *threading );
+  void solve( vector_double *solution, vector_double *source, level_struct *l, struct Thread *threading );
   void solve_driver( level_struct *l, struct Thread *threading );
   
 #endif

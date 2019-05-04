@@ -21,9 +21,8 @@
 
 #include "main.h"
 
-#ifndef OPTIMIZED_LINALG_float
 void process_multi_inner_product_MP( int count, complex_double *results, vector_float *phi,
-                                     vector_float psi, int start, int end, level_struct *l,
+                                     vector_float *psi, int start, int end, level_struct *l,
                                      struct Thread *threading ) {
 
   PROF_float_START( _PIP, threading );
@@ -39,7 +38,7 @@ void process_multi_inner_product_MP( int count, complex_double *results, vector_
   compute_core_start_end_custom(start, end, &thread_start, &thread_end, l, threading, 12);
   for(int c=0; c<count; c++) {
     for ( i=thread_start; i<thread_end; ) {
-      FOR12( results[c] += (complex_double) conj_float(phi[c][i])*psi[i]; i++; )
+      FOR12( results[c] += (complex_double) conj_float(phi[c].vector_buffer[i])*psi->vector_buffer[i]; i++; )
     }
   }
 
@@ -60,9 +59,30 @@ void process_multi_inner_product_MP( int count, complex_double *results, vector_
 
   PROF_float_STOP( _PIP, (double)(end-start)/(double)l->inner_vector_size, threading );
 }
-#endif
 
-double global_norm_MP( vector_float x, int start, int end, level_struct *l, struct Thread *threading ) {
+
+void process_multi_inner_product_MP_new( int count, complex_double *results, vector_float *phi,
+                                     vector_float *psi, level_struct *l, struct Thread *threading ) {
+
+  int start, end;
+  compute_core_start_end(0, psi->size, &start, &end, l, threading);
+  int thread = omp_get_thread_num();
+  if(thread == 0 && start != end)
+    PROF_float_START( _PIP, threading );
+  
+  int i, j, jj;
+  for(int c=0; c<count; c++)
+   VECTOR_LOOP(j, psi->num_vect, jj, results[c*psi->num_vect+j+jj] = 0.0;)
+
+  for(int c=0; c<count; c++)
+    for ( i=start; i<end; i++ )
+      VECTOR_LOOP(j, psi->num_vect, jj, results[c*psi->num_vect+j+jj] += (complex_double) conj_float(phi[c].vector_buffer[i*psi->num_vect+j+jj])*psi->vector_buffer[i*psi->num_vect+j+jj];)
+  
+  if(thread == 0 && start != end)
+    PROF_float_STOP( _PIP, (double)(end-start)/(double)l->inner_vector_size, threading );
+}
+
+double global_norm_MP( vector_float *x, int start, int end, level_struct *l, struct Thread *threading ) {
   
   PROF_float_START( _GIP, threading );
   
@@ -75,7 +95,7 @@ double global_norm_MP( vector_float x, int start, int end, level_struct *l, stru
   
   SYNC_CORES(threading)
   for ( i=thread_start; i<thread_end; )
-    FOR12( local_alpha += (complex_double) NORM_SQUARE_float(x[i]); i++; )
+    FOR12( local_alpha += (complex_double) NORM_SQUARE_float(x->vector_buffer[i]); i++; )
 
   // sum over cores
   START_NO_HYPERTHREADS(threading)
@@ -108,4 +128,24 @@ double global_norm_MP( vector_float x, int start, int end, level_struct *l, stru
     PROF_float_STOP( _GIP, (double)(end-start)/(double)l->inner_vector_size, threading );
     return sqrt((double)local_alpha);
   }
+}
+
+void global_norm_MP_new( double *res, vector_float *x, level_struct *l, struct Thread *threading ) {
+
+  int start, end;
+  compute_core_start_end(0, x->size, &start, &end, l, threading);
+  int thread = omp_get_thread_num();
+  if(thread == 0 && start != end)
+    PROF_float_START( _GIP, threading );
+
+  int i, j, jj;
+  VECTOR_LOOP(j, x->num_vect, jj, res[j+jj]=0;)
+  
+  for( i=start; i<end; i++ )
+    VECTOR_LOOP(j, x->num_vect, jj, res[j+jj] += NORM_SQUARE_float(x->vector_buffer[i*x->num_vect+j+jj]);)
+  
+  VECTOR_LOOP(j, x->num_vect, jj, res[j+jj] = (double)sqrt((double)res[j+jj]);)
+  
+  if(thread == 0 && start != end)
+    PROF_float_STOP( _GIP, (double)(end-start)/(double)l->inner_vector_size, threading );
 }

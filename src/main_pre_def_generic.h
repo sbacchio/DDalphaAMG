@@ -21,17 +21,26 @@
 
 #ifndef MAIN_PRE_DEF_PRECISION_HEADER
   #define MAIN_PRE_DEF_PRECISION_HEADER
-  
+
   typedef PRECISION complex complex_PRECISION;
   typedef PRECISION complex *config_PRECISION;
-  typedef PRECISION complex *vector_PRECISION;
+  typedef PRECISION complex *buffer_PRECISION;
+
+  typedef struct {
+    buffer_PRECISION vector_buffer;
+    int num_vect;
+    int layout;
+    int type;
+    int size;
+    struct level_struct *l;
+  } vector_PRECISION;
 
   typedef struct {
     int length[8], *boundary_table[8], max_length[4],
         comm_start[8], in_use[8], offset, comm,
         num_even_boundary_sites[8], num_odd_boundary_sites[8],
         num_boundary_sites[8];
-    vector_PRECISION buffer[8];
+    buffer_PRECISION buffer[8];
     MPI_Request sreqs[8], rreqs[8];
   } comm_PRECISION_struct;
   
@@ -52,12 +61,9 @@
         *index_table, *neighbor_table, *translation_table, table_dim[4],
         *backward_neighbor_table,
         table_mod_dim[4], *config_boundary_table[4];
-    vector_PRECISION *buffer, prnT, prnZ, prnY, prnX, prpT, prpZ, prpY, prpX;
+    vector_PRECISION *buffer;
+    buffer_PRECISION prnT, prnZ, prnY, prnX, prpT, prpZ, prpY, prpX;
     comm_PRECISION_struct c;
-    OPERATOR_TYPE_PRECISION *D_vectorized;
-    OPERATOR_TYPE_PRECISION *D_transformed_vectorized;
-    OPERATOR_TYPE_PRECISION *clover_vectorized;
-    OPERATOR_TYPE_PRECISION *clover_oo_inv_vectorized;
 #ifdef HAVE_TM
     double mu, mu_odd_shift, mu_even_shift;
     config_PRECISION tm_term;
@@ -65,8 +71,6 @@
 #ifdef HAVE_TM1p1
     double epsbar, epsbar_ig5_odd_shift, epsbar_ig5_even_shift;
     config_PRECISION epsbar_term, clover_doublet_oo_inv;
-    OPERATOR_TYPE_PRECISION *clover_doublet_vectorized;
-    OPERATOR_TYPE_PRECISION *clover_doublet_oo_inv_vectorized;
 #endif
   } operator_PRECISION_struct;
   
@@ -87,7 +91,7 @@
     operator_PRECISION_struct op;
     vector_PRECISION buf1, buf2, buf3, buf4, buf5;
     vector_PRECISION oe_buf[4];
-    vector_PRECISION local_minres_buffer[3];
+    buffer_PRECISION local_minres_buffer[3];
     int block_oe_offset, *index[4], dir_length[4], num_blocks, num_colors,
         dir_length_even[4], dir_length_odd[4], *oe_index[4],
         num_block_even_sites, num_block_odd_sites, num_aggregates,

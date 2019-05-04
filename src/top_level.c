@@ -21,25 +21,29 @@
 
 #include "main.h"
 
-void rhs_define( vector_double rhs, level_struct *l, struct Thread *threading ) {
+void rhs_define( vector_double *rhs, level_struct *l, struct Thread *threading ) {
   
   // no hyperthreading here
   if(threading->thread != 0)
     return;
 
-  int start = threading->start_index[l->depth];
-  int end = threading->end_index[l->depth];
+  //int start = threading->start_index[l->depth];
+  //int end = threading->end_index[l->depth];
 
   if ( g.rhs == 0 ) {
-    vector_double_define( rhs, 1, start, end, l );
+    //vector_double_define( rhs, 1, start, end, l );
+    vector_double_define_new( rhs, 1, l, threading );
     START_MASTER(threading)
     if ( g.print > 0 ) printf0("rhs = ones\n");
     END_MASTER(threading)
   } else if ( g.rhs == 1 )  {
-    vector_double_define( rhs, 0, start, end, l );
+    //vector_double_define( rhs, 0, start, end, l );
+    vector_double_define_new( rhs, 0, l, threading );
     if ( g.my_rank == 0 ) {
       START_LOCKED_MASTER(threading)
-      rhs[0] = 1.0;
+      //rhs->vector_buffer[0] = 1.0;
+      for ( int i=0; i<rhs->num_vect; i++ )
+        rhs->vector_buffer[i*(rhs->size)] = 1.0;
       END_LOCKED_MASTER(threading)
     }
     START_MASTER(threading)
@@ -48,13 +52,15 @@ void rhs_define( vector_double rhs, level_struct *l, struct Thread *threading ) 
   } else if ( g.rhs == 2 ) {
     // this would yield different results if we threaded it, so we don't
     START_LOCKED_MASTER(threading)
-    vector_double_define_random( rhs, 0, l->inner_vector_size, l );
+    //vector_double_define_random( rhs, 0, l->inner_vector_size, l );
+    vector_double_define_random_new( rhs, l, threading );
     END_LOCKED_MASTER(threading)
     START_MASTER(threading)
     if ( g.print > 0 ) printf0("rhs = random\n");
     END_MASTER(threading)
   } else if ( g.rhs == 3 ) {
-    vector_double_define( rhs, 0, start, end, l );
+    //vector_double_define( rhs, 0, start, end, l );
+    vector_double_define_new( rhs, 0, l, threading );
   } else {
     ASSERT( g.rhs >= 0 && g.rhs <= 4 );
   }
@@ -62,10 +68,9 @@ void rhs_define( vector_double rhs, level_struct *l, struct Thread *threading ) 
 }
 
 
-int wilson_driver( vector_double solution, vector_double source, level_struct *l, struct Thread *threading ) {
+int wilson_driver( vector_double *solution, vector_double *source, level_struct *l, struct Thread *threading ) {
   
-  int iter = 0, start = threading->start_index[l->depth], end = threading->end_index[l->depth];
-  
+  int iter = 0; //, start = threading->start_index[l->depth], end = threading->end_index[l->depth];
   vector_double rhs = (g.mixed_precision==2 && g.method >= 0)?g.p_MP.dp.b:g.p.b;
   vector_double sol = (g.mixed_precision==2 && g.method >= 0)?g.p_MP.dp.x:g.p.x;
 
@@ -78,8 +83,11 @@ int wilson_driver( vector_double solution, vector_double source, level_struct *l
   for ( int i=0; i<100; i++ ) {
     double tmp_t = -MPI_Wtime();
 #endif
-  
-  vector_double_copy( rhs, source, start, end, l );  
+  vector_double_change_layout( &sol, &sol, _LV_SV_NV, no_threading );
+  vector_double_change_layout( &rhs, &rhs, _LV_SV_NV, no_threading );
+
+  //vector_double_copy( &rhs, source, start, end, l );
+  vector_double_copy_new( &rhs, source, l, threading );
   if ( g.method == -1 ) {
     cgn_double( &(g.p), l, threading );
   } else if ( g.mixed_precision == 2 ) {
@@ -87,7 +95,9 @@ int wilson_driver( vector_double solution, vector_double source, level_struct *l
   } else {
     iter = fgmres_double( &(g.p), l, threading );
   }
-  vector_double_copy( solution, sol, start, end, l );
+  //vector_double_copy( solution, &sol, start, end, l );
+  vector_double_copy_new( solution, &sol, l, threading );
+  
 #ifdef WILSON_BENCHMARK
     tmp_t += MPI_Wtime();
     if ( tmp_t < t_min )
@@ -101,17 +111,21 @@ int wilson_driver( vector_double solution, vector_double source, level_struct *l
   END_MASTER(threading)
 #endif
   
+  vector_double_change_layout( &sol, &sol, _NV_LV_SV, no_threading );
+  vector_double_change_layout( &rhs, &rhs, _NV_LV_SV, no_threading );
+
   return iter;
 }
 
 
-void solve( vector_double solution, vector_double source, level_struct *l, struct Thread *threading ) {
+void solve( vector_double *solution, vector_double *source, level_struct *l, struct Thread *threading ) {
   
   if ( g.vt.evaluation ) {
     vector_double rhs = g.mixed_precision==2?g.p_MP.dp.b:g.p.b;
     // this would yield different results if we threaded it, so we don't
     START_LOCKED_MASTER(threading)
-    vector_double_define_random( rhs, 0, l->inner_vector_size, l );
+    //vector_double_define_random( &rhs, 0, l->inner_vector_size, l );
+    vector_double_define_random_new( &rhs, l, threading );
     scan_var( &(g.vt), l );
     END_LOCKED_MASTER(threading)
   } else {
@@ -122,8 +136,11 @@ void solve( vector_double solution, vector_double source, level_struct *l, struc
 
 void solve_driver( level_struct *l, struct Thread *threading ) {
   
-  vector_double solution = NULL, source = NULL;
-  double minus_twisted_bc[4], norm;
+  vector_double solution, source;
+  double minus_twisted_bc[4], norm[g.num_rhs_vect];
+  
+  vector_double_init( &solution );
+  vector_double_init( &source );
  
   if(g.bc==2)
     for ( int i=0; i<4; i++ )
@@ -135,55 +152,66 @@ void solve_driver( level_struct *l, struct Thread *threading ) {
     printf0("inverting doublet operator\n");
   }
 #endif
-  PUBLIC_MALLOC( solution, complex_double, l->inner_vector_size );
-  PUBLIC_MALLOC( source, complex_double, l->inner_vector_size );
+  vector_double_alloc( &solution, _INNER, g.num_rhs_vect, l, threading );
+  vector_double_alloc( &source, _INNER, g.num_rhs_vect, l, threading );
 
-  rhs_define( source, l, threading );
+  rhs_define( &source, l, threading );
+  
+  vector_double_change_layout( &solution, &solution, _LV_SV_NV, no_threading );
+  vector_double_change_layout( &source, &source, _LV_SV_NV, no_threading );
 
   if(g.bc==2)
-    apply_twisted_bc_to_vector_double( source, source, g.twisted_bc, l);
+      apply_twisted_bc_to_vector_double_new( &source, &source, g.twisted_bc, l);
 
-  norm = global_norm_double( source, 0, l->inner_vector_size, l, threading );
-  printf0("source vector norm: %le\n",norm);
-
+  global_norm_double_new( norm, &source, l, threading );
+  for( int i=0; i<g.num_rhs_vect; i++ ){
+    //norm = global_norm_double( &source, 0, l->inner_vector_size, l, threading );
+    printf0("source vector %d norm: %le\n",i,norm[i]);
+  }
 #ifdef HAVE_TM1p1
   if( g.n_flavours == 1 )
 #endif
 #ifdef HAVE_TM
-  if ( g.mu + g.mu_odd_shift != 0.0 || g.mu + g.mu_even_shift != 0.0 )
-    if(g.downprop) {
+    if ( g.mu + g.mu_odd_shift != 0.0 || g.mu + g.mu_even_shift != 0.0 )
+      if(g.downprop) {
       
-      START_MASTER(threading)  
-      printf0("\n\n+--------------------------- up ---------------------------+\n\n");
-      END_MASTER(threading)
+	START_MASTER(threading)  
+	  printf0("\n\n+--------------------------- up ---------------------------+\n\n");
+	END_MASTER(threading)
 
-      solve( solution, source, l, threading );    
+	solve( &solution, &source, l, threading );    
       
-      if(g.bc==2)
-     apply_twisted_bc_to_vector_double( solution, solution, minus_twisted_bc, l);
+	if(g.bc==2)
+	  apply_twisted_bc_to_vector_double_new( &solution, &solution, minus_twisted_bc, l);
       
-      START_LOCKED_MASTER(threading)  
-      printf0("\n\n+-------------------------- down --------------------------+\n\n");
-      g.mu*=-1;
-      g.mu_odd_shift*=-1;
-      g.mu_even_shift*=-1;
-      END_LOCKED_MASTER(threading)
+	START_LOCKED_MASTER(threading)  
+	  printf0("\n\n+-------------------------- down --------------------------+\n\n");
+	  g.mu*=-1;
+	  g.mu_odd_shift*=-1;
+	  g.mu_even_shift*=-1;
+	END_LOCKED_MASTER(threading)
   
-      tm_term_update( g.mu, l, threading );
-      finalize_operator_update( l, threading );
-    } 
+	tm_term_update( g.mu, l, threading );
+        finalize_operator_update( l, threading );
+      } 
 #endif
 
-  solve( solution, source, l, threading );
+  solve( &solution, &source, l, threading );
 
   if(g.bc==2)
-    apply_twisted_bc_to_vector_double( solution, solution, minus_twisted_bc, l);
+    apply_twisted_bc_to_vector_double_new( &solution, &solution, minus_twisted_bc, l);
+ 
+  global_norm_double_new( norm, &solution, l, threading );
+  for( int i=0; i<g.num_rhs_vect; i++ ){
+    //norm = global_norm_double( &solution, 0, l->inner_vector_size, l, threading );
+    printf0("solution vector %d norm: %le\n",i,norm[i]);
+  }
 
-  norm = global_norm_double( solution, 0, l->inner_vector_size, l, threading );
-  printf0("solution vector norm: %le\n",norm);
+  vector_double_change_layout( &solution, &solution, _NV_LV_SV, no_threading );
+  vector_double_change_layout( &source, &source, _NV_LV_SV, no_threading );
 
-  PUBLIC_FREE( solution, complex_double, l->inner_vector_size );
-  PUBLIC_FREE( source, complex_double, l->inner_vector_size );
+  vector_double_free( &solution, l, threading );
+  vector_double_free( &source, l, threading );
 
 #ifdef HAVE_TM1p1
   if( g.n_flavours == 2 ) 

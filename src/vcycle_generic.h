@@ -32,10 +32,10 @@
   #include "threading.h"
   #include "solver_analysis.h"
 
-  void smoother_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRECISION eta,
+  void smoother_PRECISION( vector_PRECISION *phi, vector_PRECISION *Dphi, vector_PRECISION *eta,
                            int n, const int res, level_struct *l, struct Thread *threading );
     
-  void vcycle_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRECISION eta,
+  void vcycle_PRECISION( vector_PRECISION *phi, vector_PRECISION *Dphi, vector_PRECISION *eta,
                          int res, level_struct *l, struct Thread *threading );
   
 #endif

@@ -29,10 +29,10 @@
   void interpolation_PRECISION_dummy_alloc( level_struct *l );
   void interpolation_PRECISION_dummy_free( level_struct *l );
   
-  void interpolate_PRECISION( vector_PRECISION phi, vector_PRECISION phi_c, level_struct *l, struct Thread *threading );
-  void interpolate3_PRECISION( vector_PRECISION phi, vector_PRECISION phi_c, level_struct *l, struct Thread *threading );
-  void restrict_PRECISION( vector_PRECISION phi_c, vector_PRECISION phi, level_struct *l, struct Thread *threading );
+  void interpolate_PRECISION( vector_PRECISION *phi, vector_PRECISION *phi_c, level_struct *l, struct Thread *threading );
+  void interpolate3_PRECISION( vector_PRECISION *phi, vector_PRECISION *phi_c, level_struct *l, struct Thread *threading );
+  void restrict_PRECISION( vector_PRECISION *phi_c, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
   
-  void define_interpolation_PRECISION_operator( complex_PRECISION **interpolation, level_struct *l, struct Thread *threading );
+  void define_interpolation_PRECISION_operator( vector_PRECISION *interpolation, level_struct *l, struct Thread *threading );
 #endif
 

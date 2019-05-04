@@ -22,10 +22,10 @@
 #include "main.h"
 #include "vcycle_PRECISION.h"
 
-void smoother_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRECISION eta,
+void smoother_PRECISION( vector_PRECISION *phi, vector_PRECISION *Dphi, vector_PRECISION *eta,
                          int n, const int res, level_struct *l, struct Thread *threading ) {
   
-  ASSERT( phi != eta );
+  ASSERT( phi->vector_buffer != eta->vector_buffer );
 
   START_MASTER(threading);
   PROF_PRECISION_START( _SM );
@@ -47,10 +47,10 @@ void smoother_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRE
     if ( g.method == 4 || g.method == 6 ) {
       if ( g.odd_even ) {
         if ( res == _RES ) {
-          apply_operator_PRECISION( l->sp_PRECISION.x, phi, &(l->p_PRECISION), l, threading );
-          vector_PRECISION_minus( l->sp_PRECISION.x, eta, l->sp_PRECISION.x, start, end, l );
+          apply_operator_PRECISION( &(l->sp_PRECISION.x), phi, &(l->p_PRECISION), l, threading );
+          vector_PRECISION_minus( &(l->sp_PRECISION.x), eta, &(l->sp_PRECISION.x), start, end, l );
         }
-        block_to_oddeven_PRECISION( l->sp_PRECISION.b, res==_RES?l->sp_PRECISION.x:eta, l, threading );
+        block_to_oddeven_PRECISION( &(l->sp_PRECISION.b), res==_RES?&(l->sp_PRECISION.x):eta, l, threading );
         START_LOCKED_MASTER(threading)
         l->sp_PRECISION.initial_guess_zero = _NO_RES;
         END_LOCKED_MASTER(threading)
@@ -62,21 +62,21 @@ void smoother_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRE
           else coarse_solve_odd_even_PRECISION( &(l->sp_PRECISION), &(l->oe_op_PRECISION), l, threading );
         }
         if ( res == _NO_RES ) {
-          oddeven_to_block_PRECISION( phi, l->sp_PRECISION.x, l, threading );
+          oddeven_to_block_PRECISION( phi, &(l->sp_PRECISION.x), l, threading );
         } else {
-          oddeven_to_block_PRECISION( l->sp_PRECISION.b, l->sp_PRECISION.x, l, threading );
-          vector_PRECISION_plus( phi, phi, l->sp_PRECISION.b, start, end, l );
+          oddeven_to_block_PRECISION( &(l->sp_PRECISION.b), &(l->sp_PRECISION.x), l, threading );
+          vector_PRECISION_plus( phi, phi, &(l->sp_PRECISION.b), start, end, l );
         }
       } else {
         START_LOCKED_MASTER(threading)
-        l->sp_PRECISION.x = phi; l->sp_PRECISION.b = eta;
+        l->sp_PRECISION.x = *phi; l->sp_PRECISION.b = *eta;
         END_LOCKED_MASTER(threading)
         fgmres_PRECISION( &(l->sp_PRECISION), l, threading );
       }
     } else if ( g.method == 5 ) {
-      vector_PRECISION_copy( l->sp_PRECISION.b, eta, start, end, l );
+      vector_PRECISION_copy( &(l->sp_PRECISION.b), eta, start, end, l );
       bicgstab_PRECISION( &(l->sp_PRECISION), l, threading );
-      vector_PRECISION_copy( phi, l->sp_PRECISION.x, start, end, l );
+      vector_PRECISION_copy( phi, &(l->sp_PRECISION.x), start, end, l );
     }
     ASSERT( Dphi == NULL );
   }
@@ -87,19 +87,19 @@ void smoother_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRE
 }
 
 
-void vcycle_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRECISION eta,
+void vcycle_PRECISION( vector_PRECISION *phi, vector_PRECISION *Dphi, vector_PRECISION *eta,
                        int res, level_struct *l, struct Thread *threading ) {
 
   if ( g.interpolation && l->level>0 ) {
     for ( int i=0; i<l->n_cy; i++ ) {
       if ( i==0 && res == _NO_RES ) {
-        restrict_PRECISION( l->next_level->p_PRECISION.b, eta, l, threading );
+        restrict_PRECISION( &(l->next_level->p_PRECISION.b), eta, l, threading );
       } else {
         int start = threading->start_index[l->depth];
         int end   = threading->end_index[l->depth];
-        apply_operator_PRECISION( l->vbuf_PRECISION[2], phi, &(l->p_PRECISION), l, threading );
-        vector_PRECISION_minus( l->vbuf_PRECISION[3], eta, l->vbuf_PRECISION[2], start, end, l );
-        restrict_PRECISION( l->next_level->p_PRECISION.b, l->vbuf_PRECISION[3], l, threading );
+        apply_operator_PRECISION( &(l->vbuf_PRECISION[2]), phi, &(l->p_PRECISION), l, threading );
+        vector_PRECISION_minus( &(l->vbuf_PRECISION[3]), eta, &(l->vbuf_PRECISION[2]), start, end, l );
+        restrict_PRECISION( &(l->next_level->p_PRECISION.b), &(l->vbuf_PRECISION[3]), l, threading );
       }
       if ( !l->next_level->idle ) {
         START_MASTER(threading)
@@ -110,7 +110,7 @@ void vcycle_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRECI
           if ( g.kcycle )
             fgmres_PRECISION( &(l->next_level->p_PRECISION), l->next_level, threading );
           else
-            vcycle_PRECISION( l->next_level->p_PRECISION.x, NULL, l->next_level->p_PRECISION.b, _NO_RES, l->next_level, threading );
+            vcycle_PRECISION( &(l->next_level->p_PRECISION.x), NULL, &(l->next_level->p_PRECISION.b), _NO_RES, l->next_level, threading );
         } else {
           if ( g.odd_even ) {
             if ( g.method == 6 ) {
@@ -128,9 +128,9 @@ void vcycle_PRECISION( vector_PRECISION phi, vector_PRECISION Dphi, vector_PRECI
         END_MASTER(threading)
       }
       if( i == 0 && res == _NO_RES )
-        interpolate3_PRECISION( phi, l->next_level->p_PRECISION.x, l, threading );
+        interpolate3_PRECISION( phi, &(l->next_level->p_PRECISION.x), l, threading );
       else
-        interpolate_PRECISION( phi, l->next_level->p_PRECISION.x, l, threading );
+        interpolate_PRECISION( phi, &(l->next_level->p_PRECISION.x), l, threading );
       smoother_PRECISION( phi, Dphi, eta, l->post_smooth_iter, _RES, l, threading );
       res = _RES;
     }

@@ -29,6 +29,6 @@
   #include "schwarz_float.h"
   #include "schwarz_double.h"
 
-  void preconditioner( vector_double phi, vector_double Dphi, vector_double eta,
+  void preconditioner( vector_double *phi, vector_double *Dphi, vector_double *eta,
                        const int res, level_struct *l, struct Thread *threading );
 #endif

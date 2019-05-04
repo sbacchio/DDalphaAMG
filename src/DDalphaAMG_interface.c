@@ -570,7 +570,7 @@ void DDalphaAMG_update_setup( int iterations, DDalphaAMG_status * mg_status ) {
   }
 }
 
-static inline void vector_copy( vector_double vector_out, vector_double vector_in )
+static inline void vector_copy( vector_double *vector_out, vector_double *vector_in )
 {
   THREADED(threading[0]->n_core) {
     int start = threading[omp_get_thread_num()]->start_index[0], 
@@ -591,7 +591,7 @@ static inline void solver( )
     }
 }
 
-static inline void correct_guess( vector_double guess, vector_double solution, vector_double solution2,
+static inline void correct_guess( vector_double *guess, vector_double *solution, vector_double *solution2,
                                   double  even_dshift, double odd_dshift )
 {
   // guess = D^{-1}*rhs - i*dshift*D^{-2}*rhs 
@@ -666,8 +666,8 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
   complex_double twisted_bc, tmp1, tmp2;
   double phase[4] = {_COMPLEX_double_ZERO, _COMPLEX_double_ZERO, _COMPLEX_double_ZERO, _COMPLEX_double_ZERO}, vmin=1, vmax=EPS_float, vtmp, nrhs, nrhs2;
   gmres_double_struct *p = g.mixed_precision==2?&(g.p_MP.dp):&(g.p);
-  vector_double vb=p->b, rhs = p->b;
-  vector_double vx=p->x, sol = p->x;
+  buffer_double vb=p->b.vector_buffer, vx=p->x.vector_buffer;
+  vector_double *rhs = &(p->b), *sol = &(p->x);
   DDalphaAMG_status tmp_status;
 
   double t0, t1;
@@ -717,40 +717,41 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
             for ( mu=0; mu<4; mu++ ) {
               for ( k=0; k<3; k++, j++ ) {
 #ifndef BASIS4 
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
-                rhs[j+6] = ((complex_double)vector2_in[i+2*(k+3*mu)] + I*(complex_double)vector2_in[i+2*(k+3*mu)+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
+                rhs->vector_buffer[j+6] = ((complex_double)vector2_in[i+2*(k+3*mu)] + I*(complex_double)vector2_in[i+2*(k+3*mu)+1]) * twisted_bc;
 
 #else
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
-                rhs[j+6] = ((complex_double)vector2_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector2_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                rhs->vector_buffer[j+6] = ((complex_double)vector2_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector2_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
 #endif
 
                 if(p->initial_guess_zero == 0) {
 #ifndef BASIS4 
-                  sol[j] = ((complex_double)vector1_out[i+2*(k+3*mu)] + I*(complex_double)vector1_out[i+2*(k+3*mu)+1]) * twisted_bc;
-                  sol[j+6] = ((complex_double)vector2_out[i+2*(k+3*mu)] + I*(complex_double)vector2_out[i+2*(k+3*mu)+1]) * twisted_bc;
+                  sol->vector_buffer[j] = ((complex_double)vector1_out[i+2*(k+3*mu)] + I*(complex_double)vector1_out[i+2*(k+3*mu)+1]) * twisted_bc;
+                  sol->vector_buffer[j+6] = ((complex_double)vector2_out[i+2*(k+3*mu)] + I*(complex_double)vector2_out[i+2*(k+3*mu)+1]) * twisted_bc;
 
 #else
-                  sol[j] = ((complex_double)vector1_out[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_out[i+2*(k+3*(3-mu))+1]) * twisted_bc;
-                  sol[j+6] = ((complex_double)vector2_out[i+2*(k+3*(3-mu))] + I*(complex_double)vector2_out[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                  sol->vector_buffer[j] = ((complex_double)vector1_out[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_out[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                  sol->vector_buffer[j+6] = ((complex_double)vector2_out[i+2*(k+3*(3-mu))] + I*(complex_double)vector2_out[i+2*(k+3*(3-mu))+1]) * twisted_bc;
 #endif
                 }
                 
 #ifndef INIT_ONE_PREC
                 if(g.mixed_precision==2) {
-                  vtmp=cabs(rhs[j]);
+                  vtmp=cabs(rhs->vector_buffer[j]);
                   if(vtmp > vmax)
                     vmax=vtmp;
                   if( vtmp > EPS_double && vtmp < vmin )
                     vmin=vtmp;
-                  vtmp=cabs(rhs[j+6]);
+                  vtmp=cabs(rhs->vector_buffer[j+6]);
                   if(vtmp > vmax)
                     vmax=vtmp;
                   if( vtmp > EPS_double && vtmp < vmin )
                     vmin=vtmp;
                 }
-              }
+              
 #endif
+              }
               if(mu%2)
                 j+=6;
             }
@@ -759,30 +760,31 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
             for ( mu=0; mu<4; mu++ )
               for ( k=0; k<3; k++, j++ ) {
 #ifndef BASIS4 
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
 #else
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
 #endif
 
                 if(p->initial_guess_zero == 0) {
 #ifndef BASIS4 
-                  sol[j] = ((complex_double)vector1_out[i+2*(k+3*mu)] + I*(complex_double)vector1_out[i+2*(k+3*mu)+1]) * twisted_bc;
+                  sol->vector_buffer[j] = ((complex_double)vector1_out[i+2*(k+3*mu)] + I*(complex_double)vector1_out[i+2*(k+3*mu)+1]) * twisted_bc;
 
 #else
-                  sol[j] = ((complex_double)vector1_out[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_out[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                  sol->vector_buffer[j] = ((complex_double)vector1_out[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_out[i+2*(k+3*(3-mu))+1]) * twisted_bc;
 #endif
                 }
                 
 #ifndef INIT_ONE_PREC
                 if(g.mixed_precision==2) {
-                  vtmp=cabs(rhs[j]);
+                  vtmp=cabs(rhs->vector_buffer[j]);
                   if(vtmp > vmax)
                     vmax=vtmp;
                   if( vtmp > EPS_double && vtmp < vmin )
                     vmin=vtmp;
                 }
-              }
+              
 #endif
+              }
         }
       }
     }
@@ -803,10 +805,10 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
     g.mixed_precision=1;
     p = &(g.p);
     // storing pointer in x and b
-    vb = p->b; 
-    vx = p->x;
-    p->b = g.p_MP.dp.b;
-    p->x = g.p_MP.dp.x;
+    vb = p->b.vector_buffer; 
+    vx = p->x.vector_buffer;
+    p->b.vector_buffer = g.p_MP.dp.b.vector_buffer;
+    p->x.vector_buffer = g.p_MP.dp.x.vector_buffer;
     p->tol = g.p_MP.dp.tol;
   } else precision_changed = 0;
 #endif
@@ -984,8 +986,8 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
           if(g.n_flavours==2) {
             for ( mu=0; mu<4; mu++ ) {
               for ( k=0; k<3; k++, j++ ) {
-                tmp1 = sol[j] * twisted_bc;
-                tmp2 = sol[j+6] * twisted_bc;
+                tmp1 = sol->vector_buffer[j] * twisted_bc;
+                tmp2 = sol->vector_buffer[j+6] * twisted_bc;
 #ifndef BASIS4 
                 vector1_out[i+2*(k+3*mu)]   = creal(tmp1);
                 vector1_out[i+2*(k+3*mu)+1] = cimag(tmp1);
@@ -1005,7 +1007,7 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
 #endif
             for ( mu=0; mu<4; mu++ )
               for ( k=0; k<3; k++, j++ ) {
-                tmp1 = sol[j] * twisted_bc;
+                tmp1 = sol->vector_buffer[j] * twisted_bc;
 #ifndef BASIS4 
                 vector1_out[i+2*(k+3*mu)]   = creal(tmp1);
                 vector1_out[i+2*(k+3*mu)+1] = cimag(tmp1);
@@ -1023,8 +1025,8 @@ static inline void DDalphaAMG_driver( double *vector1_out, double *vector1_in, d
   if (precision_changed) {
     g.mixed_precision=2;
     // recovering pointer from x and b
-    p->b = vb; 
-    p->x = vx;
+    p->b.vector_buffer = vb; 
+    p->x.vector_buffer = vx;
   }
 #endif
     
@@ -1049,9 +1051,14 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
   double phase[4] = {_COMPLEX_double_ZERO, _COMPLEX_double_ZERO, _COMPLEX_double_ZERO, _COMPLEX_double_ZERO},
     vmin=1, vmax=EPS_float, vtmp, nrhs, nrhs2;
   gmres_double_struct *p = g.mixed_precision==2?&(g.p_MP.dp):&(g.p);
-  vector_double vb, rhs = p->b;
-  vector_double vx, sol = p->x;
-  vector_double source = NULL, solution = NULL, solution2 = NULL;
+  buffer_double vb, vx;
+  vector_double *rhs =&(p->b), *sol = &(p->x); 
+  vector_double source, solution, solution2;
+
+  vector_double_init( &source );
+  vector_double_init( &solution );
+  vector_double_init( &solution2 );
+
   DDalphaAMG_status tmp_status;
 
   double t0, t1;
@@ -1102,29 +1109,30 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
             for ( mu=0; mu<4; mu++ ) {
               for ( k=0; k<3; k++, j++ ) {
 #ifndef BASIS4 
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
-                rhs[j+6] = ((complex_double)vector2_in[i+2*(k+3*mu)] + I*(complex_double)vector2_in[i+2*(k+3*mu)+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
+                rhs->vector_buffer[j+6] = ((complex_double)vector2_in[i+2*(k+3*mu)] + I*(complex_double)vector2_in[i+2*(k+3*mu)+1]) * twisted_bc;
 
 #else
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
-                rhs[j+6] = ((complex_double)vector2_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector2_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                rhs->vector_buffer[j+6] = ((complex_double)vector2_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector2_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
 #endif
                 
 #ifndef INIT_ONE_PREC
                 if(g.mixed_precision==2) {
-                  vtmp=cabs(rhs[j]);
+                  vtmp=cabs(rhs->vector_buffer[j]);
                   if(vtmp > vmax)
                     vmax=vtmp;
                   if( vtmp > EPS_double && vtmp < vmin )
                     vmin=vtmp;
-                  vtmp=cabs(rhs[j+6]);
+                  vtmp=cabs(rhs->vector_buffer[j+6]);
                   if(vtmp > vmax)
                     vmax=vtmp;
                   if( vtmp > EPS_double && vtmp < vmin )
                     vmin=vtmp;
                 }
-              }
+              
 #endif
+              }
               if(mu%2)
                 j+=6;
             }
@@ -1133,21 +1141,22 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
             for ( mu=0; mu<4; mu++ )
               for ( k=0; k<3; k++, j++ ) {
 #ifndef BASIS4 
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*mu)] + I*(complex_double)vector1_in[i+2*(k+3*mu)+1]) * twisted_bc;
 #else
-                rhs[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
+                rhs->vector_buffer[j] = ((complex_double)vector1_in[i+2*(k+3*(3-mu))] + I*(complex_double)vector1_in[i+2*(k+3*(3-mu))+1]) * twisted_bc;
 #endif
                 
 #ifndef INIT_ONE_PREC
                 if( g.mixed_precision == 2 ) {
-                  vtmp = cabs(rhs[j]);
+                  vtmp = cabs(rhs->vector_buffer[j]);
                   if(vtmp > vmax)
                     vmax = vtmp;
                   if( vtmp > EPS_double && vtmp < vmin )
                     vmin = vtmp;
                 }
-              }
+              
 #endif
+              }
         }
       }
     }
@@ -1168,8 +1177,8 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
     g.mixed_precision=1;
     p = &(g.p);
     // storing pointer in x and b
-    vb = p->b; 
-    vx = p->x;
+    vb = p->b.vector_buffer; 
+    vx = p->x.vector_buffer;
     p->b = g.p_MP.dp.b;
     p->x = g.p_MP.dp.x;
     p->tol = g.p_MP.dp.tol;
@@ -1181,10 +1190,10 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
     ASSERT( odd_shifts != NULL );
   }
   if ( n_shifts > 1 ) {
-    MALLOC( source, complex_double, l.inner_vector_size );
-    MALLOC( solution, complex_double, l.inner_vector_size );
+    vector_double_alloc( &source, _INNER, 1, &l, no_threading);
+    vector_double_alloc( &solution, _INNER, 1, &l, no_threading);
     if( _TYPE == _SOLVE_SQ || _TYPE == _SOLVE_SQ_ODD || _TYPE == _SOLVE_SQ_EVEN )
-      MALLOC( solution2, complex_double, l.inner_vector_size );
+      vector_double_alloc( &solution2, _INNER, 1, &l, no_threading);
   }
   
   for ( n = 0; n < n_shifts; n++ ) {
@@ -1220,10 +1229,10 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
       
     case _SOLVE :
       if ( n ) {
-        vector_copy( rhs, source );
+        vector_copy( rhs, &source );
         p->initial_guess_zero = 0;
       } else if ( n_shifts > 1 )
-        vector_copy( source, rhs );
+        vector_copy( &source, rhs );
       
       solver( );
       break;
@@ -1231,7 +1240,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
       
     case _SOLVE_SQ :
       if ( n ) {
-        vector_copy( rhs, source );
+        vector_copy( rhs, &source );
         p->initial_guess_zero = 0;
       } else if ( n_shifts > 1 ) {
         THREADED(threading[0]->n_core) 
@@ -1243,18 +1252,18 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
 #endif
             // sol = (D_d^{-1})*g5*(D_u^{-1})*g5*rhs
             gamma5_double( rhs, rhs, &l, threading[omp_get_thread_num()] );
-        vector_copy( source, rhs );
+        vector_copy( &source, rhs );
       }
 
       if( n )
-        correct_guess( sol, solution, solution2, even_shifts[n]-even_shifts[n-1], odd_shifts[n]-odd_shifts[n-1]);
+        correct_guess( sol, &solution, &solution2, even_shifts[n]-even_shifts[n-1], odd_shifts[n]-odd_shifts[n-1]);
       // read NOTE RESIDUAL
       THREADED(threading[0]->n_core)
         nrhs = global_norm_double( rhs, p->v_start, p->v_end, &l, threading[omp_get_thread_num()] );
       p->tol = tol[n]/2.;
       solver( );
       if ( n < n_shifts-1 ) 
-        vector_copy( solution, sol );
+        vector_copy( &solution, sol );
         
       THREADED(threading[0]->n_core) 
 #ifdef HAVE_TM1p1
@@ -1272,7 +1281,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
         DDalphaAMG_change_mu_sign( &tmp_status );
 
       if( n )
-        vector_copy( sol, solution2 );
+        vector_copy( sol, &solution2 );
 
       // read NOTE RESIDUAL
       THREADED(threading[0]->n_core)
@@ -1280,7 +1289,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
       p->tol = (tol[n]-g.norm_res)*nrhs/nrhs2/8.;
       solver( );
       if ( n < n_shifts-1 ) 
-        vector_copy( solution2, sol );
+        vector_copy( &solution2, sol );
      
       // DDalphaAMG_change_mu_sign( &tmp_status );
       warning0("sign of mu changed during the inversion of squared operator\n");
@@ -1289,7 +1298,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
 
     case _SOLVE_SQ_ODD :    
       if ( n ) {
-        vector_copy( rhs, source );
+        vector_copy( rhs, &source );
         p->initial_guess_zero = 0;
       } else if ( n_shifts > 1 ) {
         THREADED(threading[0]->n_core)
@@ -1302,11 +1311,11 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
             // sol = (D_d^{-1})*g5*(D_u^{-1})*g5*rhs
             gamma5_set_even_to_zero_double(rhs, rhs, &l, threading[omp_get_thread_num()]);
        
-        vector_copy( source, rhs );
+        vector_copy( &source, rhs );
       }
 
       if( n )
-        correct_guess( sol, solution, solution2, even_shifts[n]-even_shifts[n-1], odd_shifts[n]-odd_shifts[n-1]);
+        correct_guess( sol, &solution, &solution2, even_shifts[n]-even_shifts[n-1], odd_shifts[n]-odd_shifts[n-1]);
 
       // read NOTE RESIDUAL
       THREADED(threading[0]->n_core)
@@ -1314,7 +1323,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
       p->tol = tol[n]/2.;
       solver( );
       if ( n < n_shifts-1 ) 
-        vector_copy( solution, sol );
+        vector_copy( &solution, sol );
 
       THREADED(threading[0]->n_core)
 #ifdef HAVE_TM1p1
@@ -1332,7 +1341,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
         DDalphaAMG_change_mu_sign( &tmp_status );
 
       if( n )
-        vector_copy( sol, solution2 );
+        vector_copy( sol, &solution2 );
 
       // read NOTE RESIDUAL
       THREADED(threading[0]->n_core)
@@ -1340,7 +1349,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
       p->tol = (tol[n]-g.norm_res)*nrhs/nrhs2/8.;
       solver( );
       if ( n < n_shifts-1 ) 
-        vector_copy( solution2, sol );
+        vector_copy( &solution2, sol );
 
       // DDalphaAMG_change_mu_sign( &tmp_status );
       warning0("sign of mu changed during the inversion of squared operator\n");
@@ -1349,7 +1358,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
 
     case _SOLVE_SQ_EVEN :    
       if ( n ) {
-        vector_copy( rhs, source );
+        vector_copy( rhs, &source );
         p->initial_guess_zero = 0;
       } else if ( n_shifts > 1 ) {
         THREADED(threading[0]->n_core)
@@ -1362,11 +1371,11 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
             // sol = (D_d^{-1})*g5*(D_u^{-1})*g5*rhs
             gamma5_set_odd_to_zero_double(rhs, rhs, &l, threading[omp_get_thread_num()]);
 
-        vector_copy( source, rhs );
+        vector_copy( &source, rhs );
       }
 
       if( n )
-        correct_guess( sol, solution, solution2, even_shifts[n]-even_shifts[n-1], odd_shifts[n]-odd_shifts[n-1]);
+        correct_guess( sol, &solution, &solution2, even_shifts[n]-even_shifts[n-1], odd_shifts[n]-odd_shifts[n-1]);
 
       // read NOTE RESIDUAL
       THREADED(threading[0]->n_core)
@@ -1374,7 +1383,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
       p->tol = tol[n]/2.;
       solver( );
       if ( n < n_shifts-1 ) 
-        vector_copy( solution, sol );
+        vector_copy( &solution, sol );
 
       THREADED(threading[0]->n_core)
 #ifdef HAVE_TM1p1
@@ -1392,14 +1401,14 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
         DDalphaAMG_change_mu_sign( &tmp_status );
       
       if( n )
-        vector_copy( sol, solution2 );
+        vector_copy( sol, &solution2 );
       // read NOTE RESIDUAL
       THREADED(threading[0]->n_core)
         nrhs2 = global_norm_double( rhs, p->v_start, p->v_end, &l, threading[omp_get_thread_num()] );
       p->tol = (tol[n]-g.norm_res)*nrhs/nrhs2/8.;
       solver( );
       if ( n < n_shifts-1 ) 
-        vector_copy( solution2, sol );
+        vector_copy( &solution2, sol );
 
       // DDalphaAMG_change_mu_sign( &tmp_status );
       warning0("sign of mu changed during the inversion of squared operator\n");
@@ -1449,8 +1458,8 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
             if(g.n_flavours==2) {
               for ( mu=0; mu<4; mu++ ) {
                 for ( k=0; k<3; k++, j++ ) {
-                  tmp1 = sol[j] * twisted_bc;
-                  tmp2 = sol[j+6] * twisted_bc;
+                  tmp1 = sol->vector_buffer[j] * twisted_bc;
+                  tmp2 = sol->vector_buffer[j+6] * twisted_bc;
 #ifndef BASIS4 
                   vector1_out[n][i+2*(k+3*mu)]   = creal(tmp1);
                   vector1_out[n][i+2*(k+3*mu)+1] = cimag(tmp1);
@@ -1470,7 +1479,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
 #endif
               for ( mu=0; mu<4; mu++ )
                 for ( k=0; k<3; k++, j++ ) {
-                  tmp1 = sol[j] * twisted_bc;
+                  tmp1 = sol->vector_buffer[j] * twisted_bc;
 #ifndef BASIS4 
                   vector1_out[n][i+2*(k+3*mu)]   = creal(tmp1);
                   vector1_out[n][i+2*(k+3*mu)+1] = cimag(tmp1);
@@ -1488,10 +1497,10 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
 
   p->initial_guess_zero = 1;
   if ( n_shifts > 0 ) {
-    FREE( source, complex_double, l.inner_vector_size );
-    FREE( solution, complex_double, l.inner_vector_size );
+    vector_double_free( &source, &l, no_threading);
+    vector_double_free( &solution, &l, no_threading);
     if( _TYPE == _SOLVE_SQ || _TYPE == _SOLVE_SQ_ODD || _TYPE == _SOLVE_SQ_EVEN )
-      FREE( solution2, complex_double, l.inner_vector_size );
+      vector_double_free( &solution2, &l, no_threading);
   }
 
   
@@ -1499,8 +1508,8 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
   if (precision_changed) {
     g.mixed_precision=2;
     // recovering pointer from x and b
-    p->b = vb; 
-    p->x = vx;
+    p->b.vector_buffer = vb; 
+    p->x.vector_buffer = vx;
   }
 #endif
     
@@ -1533,8 +1542,8 @@ static inline void DDalphaAMG_proj_driver( double *vector_out, double *vector_in
     from=ltmp->next_level;
     to=ltmp;    
   }
-  vector_float rhs = from->p_float.b;
-  vector_float sol = to->p_float.x;
+  vector_float *rhs = &(from->p_float.b);
+  vector_float *sol = &(to->p_float.x);
 
   double t0, t1;
   t0 = MPI_Wtime();
@@ -1559,7 +1568,7 @@ static inline void DDalphaAMG_proj_driver( double *vector_out, double *vector_in
             i = 2*j;
           
           for ( mu=0; mu<from->num_lattice_site_var; mu++, j++ )
-            rhs[j] = ((complex_float)vector_in[i+2*mu] + I*(complex_float)vector_in[i+2*mu+1]);
+            rhs->vector_buffer[j] = ((complex_float)vector_in[i+2*mu] + I*(complex_float)vector_in[i+2*mu+1]);
         }
 
   switch(_TYPE) {
@@ -1596,8 +1605,8 @@ static inline void DDalphaAMG_proj_driver( double *vector_out, double *vector_in
             i = 2*j;
           
           for ( mu=0; mu<to->num_lattice_site_var; mu++, j++ ) {
-            vector_out[i+2*mu]   = (double) creal(sol[j]);
-            vector_out[i+2*mu+1] = (double) cimag(sol[j]);
+            vector_out[i+2*mu]   = (double) creal(sol->vector_buffer[j]);
+            vector_out[i+2*mu+1] = (double) cimag(sol->vector_buffer[j]);
           }
         }
 
@@ -1839,7 +1848,9 @@ void DDalphaAMG_define_vector_const( double *vector, double re, double im ) {
   if(vector!=NULL){
     int start, end;
     compute_core_start_end( 0, l.inner_vector_size, &start, &end, &l, threading[omp_get_thread_num()]);
-    vector_double_define( (vector_double) vector, re+I*im, start, end, &l );
+    vector_double vec;
+    vec.vector_buffer= (buffer_double) vector;
+    vector_double_define( &vec, re+I*im, start, end, &l );
   }
   else {
     warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");
@@ -1852,7 +1863,9 @@ void DDalphaAMG_define_vector_rand( double *vector ) {
   if(vector!=NULL){
     int start, end;
     compute_core_start_end( 0, l.inner_vector_size, &start, &end, &l, threading[omp_get_thread_num()]);
-    vector_double_define_random( (vector_double) vector, start, end, &l );
+    vector_double vec;
+    vec.vector_buffer= (buffer_double) vector;
+    vector_double_define_random( &vec, start, end, &l );
   }
   else {
     warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");
@@ -1865,7 +1878,9 @@ double DDalphaAMG_vector_norm( double *vector ) {
   double norm = 0;
   THREADED(threading[0]->n_core)
   if(vector!=NULL){
-    norm = global_norm_double( (vector_double) vector, 0, l.inner_vector_size, &l, threading[omp_get_thread_num()] );
+    vector_double vec;
+    vec.vector_buffer = (buffer_double) vector;
+    norm = global_norm_double( &vec, 0, l.inner_vector_size, &l, threading[omp_get_thread_num()] );
    }
   else {
     warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");
@@ -1880,7 +1895,9 @@ void DDalphaAMG_vector_saxpy( double *vector_out, double a, double *x, double *y
   if(vector_out!=NULL && x!=NULL && y!=NULL){
     int start, end;
     compute_core_start_end( 0, l.inner_vector_size, &start, &end, &l, threading[omp_get_thread_num()]);
-    vector_double_saxpy( (vector_double) vector_out, (vector_double) x, (vector_double) y, a, start, end, &l );
+    vector_double vec_out, xx, yy;
+    vec_out.vector_buffer= (buffer_double) vector_out; xx.vector_buffer= (buffer_double) x; yy.vector_buffer= (buffer_double) y;
+    vector_double_saxpy( &vec_out, &xx, &yy, a, start, end, &l );
   }
   else {
     warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");

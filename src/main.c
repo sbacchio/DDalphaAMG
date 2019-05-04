@@ -89,7 +89,7 @@ int main( int argc, char **argv ) {
     
     solve_driver( &l, &threading );
   }
-  
+  printf0("Number of rhs vectors = %d\n", g.num_rhs_vect);
   finalize_common_thread_data(commonthreaddata);
   finalize_no_threading(no_threading);
   free(commonthreaddata);

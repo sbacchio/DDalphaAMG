@@ -99,24 +99,31 @@
 
   struct Thread;
 
-  complex_PRECISION global_inner_product_PRECISION( vector_PRECISION x, vector_PRECISION y, int start, int end, level_struct *l, struct Thread *threading );
-  complex_PRECISION process_inner_product_PRECISION( vector_PRECISION phi, vector_PRECISION psi, int start, int end, level_struct *l, struct Thread *threading );
+  complex_PRECISION global_inner_product_PRECISION( vector_PRECISION *x, vector_PRECISION *y, int start, int end, level_struct *l, struct Thread *threading );
+  complex_PRECISION process_inner_product_PRECISION( vector_PRECISION *phi, vector_PRECISION *psi, int start, int end, level_struct *l, struct Thread *threading );
 
-  void process_multi_inner_product_PRECISION( int count, complex_PRECISION *results, vector_PRECISION *phi, vector_PRECISION psi,
+  void process_multi_inner_product_PRECISION( int count, complex_PRECISION *results, vector_PRECISION *phi, vector_PRECISION *psi,
       int start, int end, level_struct *l, struct Thread *threading );
+  void process_multi_inner_product_PRECISION_new( int count, complex_PRECISION *results, vector_PRECISION *phi, vector_PRECISION *psi,
+      level_struct *l, struct Thread *threading );
 
-  PRECISION global_norm_PRECISION( vector_PRECISION phi, int start, int end, level_struct *l, struct Thread *threading );
-  PRECISION process_norm_PRECISION( vector_PRECISION x, int start, int end, level_struct *l, struct Thread *threading );
-  
-  complex_PRECISION local_xy_over_xx_PRECISION( vector_PRECISION phi, vector_PRECISION psi, int start, int end, level_struct *l  );
-  void vector_PRECISION_plus( vector_PRECISION z, vector_PRECISION x, vector_PRECISION y, int start, int end, level_struct *l ); // z := x + y
-  void vector_PRECISION_minus( vector_PRECISION z, vector_PRECISION x, vector_PRECISION y, int start, int end, level_struct *l ); // z := x - y
-  void vector_PRECISION_scale( vector_PRECISION z, vector_PRECISION x, complex_PRECISION alpha, int start, int end, level_struct *l ); // z := alpha*x
-  void vector_PRECISION_real_scale( vector_PRECISION z, vector_PRECISION x, complex_PRECISION alpha,
+  PRECISION global_norm_PRECISION( vector_PRECISION *phi, int start, int end, level_struct *l, struct Thread *threading );
+  PRECISION process_norm_PRECISION( vector_PRECISION *x, int start, int end, level_struct *l, struct Thread *threading );
+  void global_norm_PRECISION_new( PRECISION *res, vector_PRECISION *x, level_struct *l, struct Thread *threading );
+ 
+  complex_PRECISION local_xy_over_xx_PRECISION( vector_PRECISION *phi, vector_PRECISION *psi, int start, int end, level_struct *l  );
+  void vector_PRECISION_plus( vector_PRECISION *z, vector_PRECISION *x, vector_PRECISION *y, int start, int end, level_struct *l ); // z := x + y
+  void vector_PRECISION_plus_new( vector_PRECISION *z, vector_PRECISION *x, vector_PRECISION *y, level_struct *l, struct Thread *threading );
+  void vector_PRECISION_minus( vector_PRECISION *z, vector_PRECISION *x, vector_PRECISION *y, int start, int end, level_struct *l ); // z := x - y
+  void vector_PRECISION_minus_new( vector_PRECISION *z, vector_PRECISION *x, vector_PRECISION *y, level_struct *l, struct Thread *threading );
+  void vector_PRECISION_scale( vector_PRECISION *z, vector_PRECISION *x, complex_PRECISION alpha, int start, int end, level_struct *l ); // z := alpha*x
+  void vector_PRECISION_scale_new( vector_PRECISION *z, vector_PRECISION *x, complex_PRECISION *alpha, int k, level_struct *l, struct Thread *threading );
+  void buffer_PRECISION_real_scale( complex_PRECISION *z, complex_PRECISION *x, complex_PRECISION alpha,
                                     int start, int end, level_struct *l );
-  void vector_PRECISION_saxpy( vector_PRECISION z, vector_PRECISION x, vector_PRECISION y, complex_PRECISION alpha, int start, int end, level_struct *l ); // z := x + alpha*y
-  void vector_PRECISION_copy( vector_PRECISION z, vector_PRECISION x, int start, int end, level_struct *l ); // z := x
-  void vector_PRECISION_projection( vector_PRECISION z, vector_PRECISION v, int k, vector_PRECISION *W, complex_PRECISION *diag, 
+  void vector_PRECISION_saxpy( vector_PRECISION *z, vector_PRECISION *x, vector_PRECISION *y, complex_PRECISION alpha, int start, int end, level_struct *l ); // z := x + alpha*y
+  void vector_PRECISION_saxpy_new( vector_PRECISION *z, vector_PRECISION *x, vector_PRECISION *y, complex_PRECISION *alpha, int k, int sign, level_struct *l, struct Thread *threading );
+  void buffer_PRECISION_copy( complex_PRECISION *z, complex_PRECISION *x, int start, int end, level_struct *l ); // z := x
+  void vector_PRECISION_projection( vector_PRECISION *z, vector_PRECISION *v, int k, vector_PRECISION *W, complex_PRECISION *diag, 
                                   int orthogonal, level_struct *l, Thread *threading );
   
   void gram_schmidt_on_aggregates_PRECISION( vector_PRECISION *V, const int num_vec, level_struct *l, struct Thread *threading );
@@ -135,11 +142,11 @@
       int num_vec, int leading_dimension, level_struct *l, struct Thread *threading );
 
   void gram_schmidt_PRECISION( vector_PRECISION *V, complex_PRECISION *buffer, const int start, const int n, level_struct *l, struct Thread *threading );
-  void setup_gram_schmidt_PRECISION( vector_PRECISION *V, vector_PRECISION g5v,
+  void setup_gram_schmidt_PRECISION( vector_PRECISION *V, vector_PRECISION *g5v,
                                      complex_PRECISION *buffer, const int n, level_struct *l,
                                      struct Thread *threading );
-  void spinwise_PRECISION_skalarmultiply( vector_PRECISION eta1, vector_PRECISION eta2,
-                                          vector_PRECISION phi, complex_PRECISION alpha, int start, int end, level_struct *l );
-  void set_boundary_PRECISION( vector_PRECISION phi, complex_PRECISION alpha, level_struct *l, struct Thread *threading );
+  void spinwise_PRECISION_skalarmultiply( vector_PRECISION *eta1, vector_PRECISION *eta2,
+                                          vector_PRECISION *phi, complex_PRECISION alpha, int start, int end, level_struct *l );
+  void set_boundary_PRECISION( vector_PRECISION *phi, complex_PRECISION alpha, level_struct *l, struct Thread *threading );
   
 #endif

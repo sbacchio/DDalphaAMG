@@ -30,7 +30,7 @@ void interpolation_PRECISION_struct_init( interpolation_PRECISION_struct *is ) {
   is->test_vector = NULL;
   is->interpolation = NULL;
   is->eigenvalues = NULL;
-  is->tmp = NULL;
+  vector_PRECISION_init(&(is->tmp));
   is->bootstrap_vector = NULL;
   is->bootstrap_eigenvalues = NULL;
 }

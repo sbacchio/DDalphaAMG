@@ -32,6 +32,10 @@
 #ifndef MAIN_HEADER
   #define MAIN_HEADER
 
+  #define num_loop 4
+ 
+  #define VECTOR_LOOP(j, jmax, jj, instructions) for( j=0; j<jmax; j+=num_loop) {_Pragma("unroll") _Pragma("vector aligned") _Pragma("ivdep") for( jj=0; jj<num_loop; jj++) { instructions; }} 
+
   #define STRINGLENGTH 500
   
   #define _FILE_OFFSET_BITS 64
@@ -39,9 +43,9 @@
   #define EPS_double 1E-14
 
   #define HAVE_TM      // flag for enable twisted mass
-  #define HAVE_TM1p1   // flag for enable doublet for twisted mass
+  //#define HAVE_TM1p1   // flag for enable doublet for twisted mass
 
-  #undef INIT_ONE_PREC // flag undef for enabling additional features in the lib
+  #define INIT_ONE_PREC // flag undef for enabling additional features in the lib
   
   #define FOR2( e )  { e e }
   #define FOR3( e )  { e e e }
@@ -84,16 +88,6 @@
   #define abs_double fabs
   #define abs_float fabsf
   
-#ifdef SSE
-  #define MALLOC( variable, kind, length ) do{ if ( variable != NULL ) { \
-  printf0("malloc of \"%s\" failed: pointer is not NULL (%s:%d).\n", #variable, __FILE__, __LINE__ ); } \
-  if ( (length) > 0 ) { variable = (kind*) memalign( 64, sizeof(kind) * (length) ); } \
-  if ( variable == NULL && (length) > 0 ) { \
-  error0("malloc of \"%s\" failed: no memory allocated (%s:%d), current memory used: %lf GB.\n", \
-  #variable, __FILE__, __LINE__, g.cur_storage/1024.0 ); } \
-  g.cur_storage += (sizeof(kind) * (length))/(1024.0*1024.0); \
-  if ( g.cur_storage > g.max_storage ) g.max_storage = g.cur_storage; }while(0)
-#else
   #define MALLOC( variable, kind, length ) do{ if ( variable != NULL ) { \
   printf0("malloc of \"%s\" failed: pointer is not NULL (%s:%d).\n", #variable, __FILE__, __LINE__ ); } \
   if ( (length) > 0 ) { variable = (kind*) malloc( sizeof(kind) * (length) ); } \
@@ -102,7 +96,6 @@
   #variable, __FILE__, __LINE__, g.cur_storage/1024.0 ); } \
   g.cur_storage += (sizeof(kind) * (length))/(1024.0*1024.0); \
   if ( g.cur_storage > g.max_storage ) g.max_storage = g.cur_storage; }while(0)
-#endif
 
   #define FREE( variable, kind, length ) do{ if ( variable != NULL ) { \
   free( variable ); variable = NULL; g.cur_storage -= (sizeof(kind) * (length))/(1024.0*1024.0); } else { \
@@ -180,6 +173,9 @@
   #else
   #define DEBUGOUTPUT( A, FORMAT )
   #endif
+  
+  #define INDEX_NV_LV_SV( NV, NUM_NV, LV, NUM_LV, SV, NUM_SV ) SV+NUM_SV*LV+NUM_SV*NUM_LV*NV
+  #define INDEX_LV_SV_NV( NV, NUM_NV, LV, NUM_LV, SV, NUM_SV ) NV+NUM_NV*SV+NUM_NV*NUM_SV*LV
 
   #include "vectorization_control.h"
   #include "threading.h"
@@ -189,7 +185,7 @@
   enum { _NO_DEFAULT_SET, _DEFAULT_SET };
   enum { _NO_REORDERING, _REORDER };
   enum { _ADD, _COPY };
-  enum { _ORDINARY, _SCHWARZ, _ODDEVEN };
+  enum { _ORDINARY, _SCHWARZ, _ODDEVEN, _INNER };
   enum { _RES, _NO_RES };
   enum { _STANDARD, _LIME }; //formats
   enum { _READ, _WRITE };
@@ -201,10 +197,11 @@
   enum { _LEFT, _RIGHT, _NOTHING };
   enum { _PERIODIC, _ANTIPERIODIC, _TWISTED, _DIRICHLET };
   enum { _GIP, _PIP, _LA2, _LA6, _LA8, _LA, _CPY, _SET, _PR, _SC, _NC, _SM, _OP_COMM, _OP_IDLE, _ALLR, _GD_COMM, _GD_IDLE, _GRAM_SCHMIDT, _GRAM_SCHMIDT_ON_AGGREGATES,
-      _SM1, _SM2, _SM3, _SM4, _SMALL1, _SMALL2, _NUM_PROF }; // _NUM_PROF has always to be the last constant!
+      _SM1, _SM2, _SM3, _SM4, _SMALL1, _SMALL2, _RS, _NUM_PROF }; // _NUM_PROF has always to be the last constant!
   enum { _VTS = 20 };
   enum { _TRCKD_VAL, _STP_TIME, _SLV_ITER, _SLV_TIME, _CRS_ITER, _CRS_TIME, _SLV_ERR, _CGNR_ERR, _NUM_OPTB };
-  
+  enum { _NV_LV_SV, _LV_SV_NV }; //vector layout
+
   typedef struct block_struct {
     int start, color, no_comm, *bt;
   } block_struct;
@@ -392,6 +389,10 @@
     // bc: 0 dirichlet, 1 periodic, 2 anti-periodic
     int bc; 
     
+    // number of rhs vectors (b) to be solved at the same time (hopefully)
+    int num_rhs_vect;
+    
+
     complex_double **gamma;
     var_table vt;
     
@@ -481,24 +482,8 @@
 // functions
 #include "clifford.h"
 
-#ifdef SSE
-#include "vectorization_dirac_float.h"
-#include "vectorization_dirac_double.h"
-#include "blas_vectorized.h"
-#include "sse_blas_vectorized.h"
-#include "sse_complex_float_intrinsic.h"
-#include "sse_complex_double_intrinsic.h"
-#include "sse_coarse_operator_float.h"
-#include "sse_coarse_operator_double.h"
-#include "sse_linalg_float.h"
-#include "sse_linalg_double.h"
-#include "sse_interpolation_float.h"
-#include "sse_interpolation_double.h"
-#else
-//no intrinsics
 #include "interpolation_float.h"
 #include "interpolation_double.h"
-#endif
 
 #include "data_float.h"
 #include "data_double.h"
@@ -543,6 +528,8 @@
 #include "var_table.h"
 #include "main_post_def_float.h"
 #include "main_post_def_double.h"
+#include "vector_float.h"
+#include "vector_double.h"
 #ifdef HAVE_LIME
 #include <lime.h>
 #include <lime_config.h>

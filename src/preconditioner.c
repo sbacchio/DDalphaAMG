@@ -22,19 +22,19 @@
 #include "main.h"
 #include "preconditioner.h"
 
-void preconditioner( vector_double phi, vector_double Dphi, vector_double eta,
+void preconditioner( vector_double *phi, vector_double *Dphi, vector_double *eta,
                       const int res, level_struct *l, struct Thread *threading ) {
   if ( g.method == 0 )
     vector_double_copy( phi, eta, threading->start_index[l->depth], threading->end_index[l->depth], l );
   else if ( g.method < 5 || g.method == 6 || !g.odd_even ) {
     if ( g.mixed_precision ) {
-      trans_float( l->sbuf_float[0], eta, l->s_float.op.translation_table, l, threading );
-      vcycle_float( l->sbuf_float[1], NULL, l->sbuf_float[0], res, l, threading );
-      trans_back_float( phi, l->sbuf_float[1], l->s_float.op.translation_table, l, threading );
+      trans_float( &(l->sbuf_float[0]), eta, l->s_float.op.translation_table, l, threading );
+      vcycle_float( &(l->sbuf_float[1]), NULL, &(l->sbuf_float[0]), res, l, threading );
+      trans_back_float( phi, &(l->sbuf_float[1]), l->s_float.op.translation_table, l, threading );
     } else {
-      trans_double( l->sbuf_double[0], eta, l->s_double.op.translation_table, l, threading );
-      vcycle_double( l->sbuf_double[1], NULL, l->sbuf_double[0], res, l, threading );
-      trans_back_double( phi, l->sbuf_double[1], l->s_double.op.translation_table, l, threading );
+      trans_double( &(l->sbuf_double[0]), eta, l->s_double.op.translation_table, l, threading );
+      vcycle_double( &(l->sbuf_double[1]), NULL, &(l->sbuf_double[0]), res, l, threading );
+      trans_back_double( phi, &(l->sbuf_double[1]), l->s_double.op.translation_table, l, threading );
     }
   } else {
     if ( g.mixed_precision ) {
@@ -42,25 +42,25 @@ void preconditioner( vector_double phi, vector_double Dphi, vector_double eta,
       l->sp_float.num_restart = l->n_cy;
       l->sp_float.initial_guess_zero = res;
       END_LOCKED_MASTER(threading)
-      serial_to_oddeven_float( l->sp_float.b, eta, l, threading );
+      serial_to_oddeven_float( &(l->sp_float.b), eta, l, threading );
       if ( g.method == 6 ) {
         g5D_solve_oddeven_float( &(l->sp_float), &(l->oe_op_float), l, threading );
       } else {
         solve_oddeven_float( &(l->sp_float), &(l->oe_op_float), l, threading );
       }
-      oddeven_to_serial_float( phi, l->sp_float.x, l, threading );
+      oddeven_to_serial_float( phi, &(l->sp_float.x), l, threading );
     } else {
       START_LOCKED_MASTER(threading)
       l->sp_double.num_restart = l->n_cy;
       l->sp_double.initial_guess_zero = res;
       END_LOCKED_MASTER(threading)
-      serial_to_oddeven_double( l->sp_double.b, eta, l, threading );
+      serial_to_oddeven_double( &(l->sp_double.b), eta, l, threading );
       if ( g.method == 6 ) {
         g5D_solve_oddeven_double( &(l->sp_double), &(l->oe_op_double), l, threading );
       } else {
         solve_oddeven_double( &(l->sp_double), &(l->oe_op_double), l, threading );
       }
-      oddeven_to_serial_double( phi, l->sp_double.x, l, threading );
+      oddeven_to_serial_double( phi, &(l->sp_double.x), l, threading );
     }
     
   }

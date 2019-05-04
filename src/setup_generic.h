@@ -26,7 +26,7 @@
   
   void coarse_grid_correction_PRECISION_setup( level_struct *l, struct Thread *threading );
   void coarse_grid_correction_PRECISION_free( level_struct *l );
-  void interpolation_PRECISION_define( vector_double* V, level_struct *l, struct Thread *threading );
+  void interpolation_PRECISION_define( vector_double *V, level_struct *l, struct Thread *threading );
   void iterative_PRECISION_setup( int setup_iter, level_struct *l, struct Thread *threading );
   void re_setup_PRECISION( level_struct *l, struct Thread *threading );
   void inv_iter_inv_fcycle_PRECISION( int setup_iter, level_struct *l, struct Thread *threading );

@@ -24,20 +24,25 @@
 
   struct Thread;
   
-  void two_flavours_to_serial_PRECISION( vector_PRECISION flav1, vector_PRECISION flav2, vector_PRECISION serial, level_struct *l, struct Thread *threading );
-  void serial_to_two_flavours_PRECISION( vector_PRECISION flav1, vector_PRECISION flav2, vector_PRECISION serial, level_struct *l, struct Thread *threading );
+  void two_flavours_to_serial_PRECISION( vector_PRECISION *flav1, vector_PRECISION *flav2, vector_PRECISION *serial, level_struct *l, struct Thread *threading );
+  void serial_to_two_flavours_PRECISION( vector_PRECISION *flav1, vector_PRECISION *flav2, vector_PRECISION *serial, level_struct *l, struct Thread *threading );
 
 
-  void clover_PRECISION( vector_PRECISION eta, vector_PRECISION phi, operator_PRECISION_struct *op, int start, int end, level_struct *l, struct Thread *threading );
+  void clover_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, operator_PRECISION_struct *op, int start, int end, level_struct *l, struct Thread *threading );
+  void clover_PRECISION_new( vector_PRECISION *eta, vector_PRECISION *phi, operator_PRECISION_struct *op, int start, int end, level_struct *l, struct Thread *threading );
+
+  void d_plus_clover_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
+  void d_plus_clover_PRECISION_new( vector_PRECISION *eta, vector_PRECISION *phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
+  void d_plus_clover_dagger_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
+  void g5D_plus_clover_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
+  void block_d_plus_clover_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, int start, schwarz_PRECISION_struct *s, level_struct *l, struct Thread *threading );
+  void diagonal_aggregate_PRECISION( vector_PRECISION *eta1, vector_PRECISION *eta2, vector_PRECISION *phi, config_PRECISION diag, level_struct *l );
+  void d_plus_clover_aggregate_PRECISION( vector_PRECISION *eta1, vector_PRECISION *eta2, vector_PRECISION *phi, schwarz_PRECISION_struct *s, level_struct *l );
+  void d_neighbor_aggregate_PRECISION( vector_PRECISION *eta1, vector_PRECISION *eta2, vector_PRECISION *phi, const int mu, schwarz_PRECISION_struct *s, level_struct *l );
   
-  void d_plus_clover_PRECISION( vector_PRECISION eta, vector_PRECISION phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
-  void d_plus_clover_dagger_PRECISION( vector_PRECISION eta, vector_PRECISION phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
-  void g5D_plus_clover_PRECISION( vector_PRECISION eta, vector_PRECISION phi, operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
-  void block_d_plus_clover_PRECISION( vector_PRECISION eta, vector_PRECISION phi, int start, schwarz_PRECISION_struct *s, level_struct *l, struct Thread *threading );
-  void diagonal_aggregate_PRECISION( vector_PRECISION eta1, vector_PRECISION eta2, vector_PRECISION phi, config_PRECISION diag, level_struct *l );
-  void d_plus_clover_aggregate_PRECISION( vector_PRECISION eta1, vector_PRECISION eta2, vector_PRECISION phi, schwarz_PRECISION_struct *s, level_struct *l );
-  void d_neighbor_aggregate_PRECISION( vector_PRECISION eta1, vector_PRECISION eta2, vector_PRECISION phi, const int mu, schwarz_PRECISION_struct *s, level_struct *l );
-  void apply_twisted_bc_to_vector_PRECISION( vector_PRECISION eta, vector_PRECISION phi, double *theta, level_struct *l);
+  void apply_twisted_bc_to_vector_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, double *theta, level_struct *l);
+  void apply_twisted_bc_to_vector_PRECISION_new( vector_PRECISION *eta, vector_PRECISION *phi, double *theta, level_struct *l);
+
   void operator_updates_PRECISION( level_struct *l, struct Thread *threading );
   void m0_update_PRECISION( PRECISION m0,operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
   void tm_term_PRECISION_setup( PRECISION mu, PRECISION even, PRECISION odd, operator_PRECISION_struct *op,
@@ -46,22 +51,22 @@
                                     level_struct *l, struct Thread *threading );
   void two_flavours_test_PRECISION( operator_PRECISION_struct *op, level_struct *l, struct Thread *threading );
 
-  void gamma5_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void tau1_gamma5_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void set_even_to_zero_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void gamma5_set_even_to_zero_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void tau1_gamma5_set_even_to_zero_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void set_odd_to_zero_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void gamma5_set_odd_to_zero_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void tau1_gamma5_set_odd_to_zero_PRECISION( vector_PRECISION eta, vector_PRECISION phi, level_struct *l, struct Thread *threading );
-  void scale_even_odd_PRECISION( vector_PRECISION eta, vector_PRECISION phi, complex_double even, complex_double odd,
+  void gamma5_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void tau1_gamma5_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void set_even_to_zero_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void gamma5_set_even_to_zero_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void tau1_gamma5_set_even_to_zero_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void set_odd_to_zero_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void gamma5_set_odd_to_zero_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void tau1_gamma5_set_odd_to_zero_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, level_struct *l, struct Thread *threading );
+  void scale_even_odd_PRECISION( vector_PRECISION *eta, vector_PRECISION *phi, complex_double even, complex_double odd,
                                  level_struct *l, struct Thread *threading );
 
 
-  static inline void add_diagonal_PRECISION( const vector_PRECISION eta, const vector_PRECISION phi,
+  static inline void add_diagonal_PRECISION( const vector_PRECISION *eta, const vector_PRECISION *phi,
              const config_PRECISION diag, const int length ) {
     config_PRECISION diag_pt = diag;
-    vector_PRECISION phi_pt = phi, eta_pt = eta, eta_end = eta + length;
+    buffer_PRECISION phi_pt = phi->vector_buffer, eta_pt = eta->vector_buffer, eta_end = eta->vector_buffer + length;
 #ifdef HAVE_TM1p1
     if(g.n_flavours == 2)
       while ( eta_pt < eta_end ) {
@@ -79,10 +84,10 @@
   }
 
 #ifdef HAVE_TM1p1
-  static inline void apply_doublet_coupling_PRECISION( const vector_PRECISION eta, const vector_PRECISION phi,
+  static inline void apply_doublet_coupling_PRECISION( const vector_PRECISION *eta, const vector_PRECISION *phi,
              const config_PRECISION diag, const int length ) {
     config_PRECISION diag_pt = diag;
-    vector_PRECISION phi_pt = phi, eta_pt = eta, eta_end = eta + length;
+    buffer_PRECISION phi_pt = phi->vector_buffer, eta_pt = eta->vector_buffer, eta_end = eta->vector_buffer + length;
     while ( eta_pt < eta_end ) { 
       phi_pt += 6;
       FOR6( *eta_pt += (*phi_pt)*(*diag_pt); eta_pt++; phi_pt++; diag_pt++; )
@@ -95,7 +100,7 @@
 #endif
 
   // eta = D*phi
-  static inline void mvm_PRECISION( const vector_PRECISION eta, const complex_PRECISION *D, const vector_PRECISION phi ) {
+  static inline void mvm_PRECISION( const buffer_PRECISION eta, const complex_PRECISION *D, const buffer_PRECISION phi ) {
     eta[0]  = D[0]*phi[0];
     eta[0] += D[1]*phi[1];
     eta[0] += D[2]*phi[2];
@@ -106,9 +111,22 @@
     eta[2] += D[7]*phi[1];
     eta[2] += D[8]*phi[2];
   }
+
+  static inline void mvm_PRECISION_new( const buffer_PRECISION eta, const complex_PRECISION *D, const buffer_PRECISION phi ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, eta[0*n_vect+j+jj]  = D[0]*phi[0*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += D[1]*phi[1*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += D[2]*phi[2*n_vect+j+jj];
+                               eta[1*n_vect+j+jj]  = D[3]*phi[0*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += D[4]*phi[1*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += D[5]*phi[2*n_vect+j+jj];
+                               eta[2*n_vect+j+jj]  = D[6]*phi[0*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += D[7]*phi[1*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += D[8]*phi[2*n_vect+j+jj];)
+  }
   
   // eta = D**H*phi
-  static inline void mvmh_PRECISION( const vector_PRECISION eta, const complex_PRECISION *D, const vector_PRECISION phi ) {
+  static inline void mvmh_PRECISION( const buffer_PRECISION eta, const complex_PRECISION *D, const buffer_PRECISION phi ) {
     eta[0]  = conj_PRECISION(D[0])*phi[0];
     eta[1]  = conj_PRECISION(D[1])*phi[0];
     eta[2]  = conj_PRECISION(D[2])*phi[0];
@@ -119,9 +137,22 @@
     eta[1] += conj_PRECISION(D[7])*phi[2];
     eta[2] += conj_PRECISION(D[8])*phi[2];
   }
+
+  static inline void mvmh_PRECISION_new( const buffer_PRECISION eta, const complex_PRECISION *D, const buffer_PRECISION phi ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, eta[0*n_vect+j+jj]  = conj_PRECISION(D[0])*phi[0*n_vect+j+jj];
+                               eta[1*n_vect+j+jj]  = conj_PRECISION(D[1])*phi[0*n_vect+j+jj];
+                               eta[2*n_vect+j+jj]  = conj_PRECISION(D[2])*phi[0*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += conj_PRECISION(D[3])*phi[1*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += conj_PRECISION(D[4])*phi[1*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += conj_PRECISION(D[5])*phi[1*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += conj_PRECISION(D[6])*phi[2*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += conj_PRECISION(D[7])*phi[2*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += conj_PRECISION(D[8])*phi[2*n_vect+j+jj];)
+  }
   
   // eta = -D*phi
-  static inline void nmvm_PRECISION( const vector_PRECISION eta, const complex_PRECISION *D, const vector_PRECISION phi ) {
+  static inline void nmvm_PRECISION( const buffer_PRECISION eta, const complex_PRECISION *D, const buffer_PRECISION phi ) {
     eta[0]  = - D[0]*phi[0];
     eta[0] -=   D[1]*phi[1];
     eta[0] -=   D[2]*phi[2];
@@ -134,7 +165,7 @@
   }
 
   // eta = -D**H*phi
-  static inline void nmvmh_PRECISION( const vector_PRECISION eta, const complex_PRECISION *D, const vector_PRECISION phi ) {
+  static inline void nmvmh_PRECISION( const buffer_PRECISION eta, const complex_PRECISION *D, const buffer_PRECISION phi ) {
     eta[0]  = - conj_PRECISION(D[0])*phi[0];
     eta[1]  = - conj_PRECISION(D[1])*phi[0];
     eta[2]  = - conj_PRECISION(D[2])*phi[0];
@@ -147,7 +178,7 @@
   }
 
   // 1 - gamma_T
-  static inline void prp_T_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void prp_T_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[0] = l_pt[0] -GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO];
     prp_pt[1] = l_pt[1] -GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO+1];
     prp_pt[2] = l_pt[2] -GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO+2];
@@ -155,9 +186,19 @@
     prp_pt[4] = l_pt[4] -GAMMA_T_SPIN1_VAL*l_pt[3*GAMMA_T_SPIN1_CO+1];
     prp_pt[5] = l_pt[5] -GAMMA_T_SPIN1_VAL*l_pt[3*GAMMA_T_SPIN1_CO+2];
   }
+ 
+  static inline void prp_T_PRECISION_new( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prp_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] -GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO*n_vect+j+jj];
+                               prp_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] -GAMMA_T_SPIN0_VAL*l_pt[(3*GAMMA_T_SPIN0_CO+1)*n_vect+j+jj];
+                               prp_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] -GAMMA_T_SPIN0_VAL*l_pt[(3*GAMMA_T_SPIN0_CO+2)*n_vect+j+jj];
+                               prp_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] -GAMMA_T_SPIN1_VAL*l_pt[3*GAMMA_T_SPIN1_CO*n_vect+j+jj];
+                               prp_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] -GAMMA_T_SPIN1_VAL*l_pt[(3*GAMMA_T_SPIN1_CO+1)*n_vect+j+jj];
+                               prp_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] -GAMMA_T_SPIN1_VAL*l_pt[(3*GAMMA_T_SPIN1_CO+2)*n_vect+j+jj];)
+  }
 
   // 1 + gamma_T
-  static inline void prn_T_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void prn_T_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[0] = l_pt[0] +GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO];
     prn_pt[1] = l_pt[1] +GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO+1];
     prn_pt[2] = l_pt[2] +GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO+2];
@@ -166,8 +207,18 @@
     prn_pt[5] = l_pt[5] +GAMMA_T_SPIN1_VAL*l_pt[3*GAMMA_T_SPIN1_CO+2];
   }
 
+  static inline void prn_T_PRECISION_new( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prn_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] +GAMMA_T_SPIN0_VAL*l_pt[3*GAMMA_T_SPIN0_CO*n_vect+j+jj];
+                               prn_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] +GAMMA_T_SPIN0_VAL*l_pt[(3*GAMMA_T_SPIN0_CO+1)*n_vect+j+jj];
+                               prn_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] +GAMMA_T_SPIN0_VAL*l_pt[(3*GAMMA_T_SPIN0_CO+2)*n_vect+j+jj];
+                               prn_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] +GAMMA_T_SPIN1_VAL*l_pt[3*GAMMA_T_SPIN1_CO*n_vect+j+jj];
+                               prn_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] +GAMMA_T_SPIN1_VAL*l_pt[(3*GAMMA_T_SPIN1_CO+1)*n_vect+j+jj];
+                               prn_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] +GAMMA_T_SPIN1_VAL*l_pt[(3*GAMMA_T_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
   // - (1 - gamma_T)
-  static inline void pbp_su3_T_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void pbp_su3_T_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[0];
     l_pt[ 1] -= prp_su3_pt[1];
     l_pt[ 2] -= prp_su3_pt[2];
@@ -182,8 +233,24 @@
     l_pt[11] += GAMMA_T_SPIN3_VAL*prp_su3_pt[3*GAMMA_T_SPIN3_CO+2];
   }
 
+  static inline void pbp_su3_T_PRECISION_new( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prp_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prp_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prp_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prp_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prp_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prp_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] += GAMMA_T_SPIN2_VAL*prp_su3_pt[3*GAMMA_T_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] += GAMMA_T_SPIN2_VAL*prp_su3_pt[(3*GAMMA_T_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] += GAMMA_T_SPIN2_VAL*prp_su3_pt[(3*GAMMA_T_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] += GAMMA_T_SPIN3_VAL*prp_su3_pt[3*GAMMA_T_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] += GAMMA_T_SPIN3_VAL*prp_su3_pt[(3*GAMMA_T_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] += GAMMA_T_SPIN3_VAL*prp_su3_pt[(3*GAMMA_T_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
   // -(1 + gamma_T)
-  static inline void pbn_su3_T_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void pbn_su3_T_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[0];
     l_pt[ 1] -= prn_su3_pt[1];
     l_pt[ 2] -= prn_su3_pt[2];
@@ -198,7 +265,23 @@
     l_pt[11] -= GAMMA_T_SPIN3_VAL*prn_su3_pt[3*GAMMA_T_SPIN3_CO+2];
   }
 
-  static inline void prp_Z_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void pbn_su3_T_PRECISION_new( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prn_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prn_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prn_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prn_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prn_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prn_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] -= GAMMA_T_SPIN2_VAL*prn_su3_pt[3*GAMMA_T_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] -= GAMMA_T_SPIN2_VAL*prn_su3_pt[(3*GAMMA_T_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] -= GAMMA_T_SPIN2_VAL*prn_su3_pt[(3*GAMMA_T_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] -= GAMMA_T_SPIN3_VAL*prn_su3_pt[3*GAMMA_T_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] -= GAMMA_T_SPIN3_VAL*prn_su3_pt[(3*GAMMA_T_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] -= GAMMA_T_SPIN3_VAL*prn_su3_pt[(3*GAMMA_T_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void prp_Z_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[0] = l_pt[0] -GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO];
     prp_pt[1] = l_pt[1] -GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO+1];
     prp_pt[2] = l_pt[2] -GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO+2];
@@ -207,7 +290,17 @@
     prp_pt[5] = l_pt[5] -GAMMA_Z_SPIN1_VAL*l_pt[3*GAMMA_Z_SPIN1_CO+2];
   }
 
-  static inline void prn_Z_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void prp_Z_PRECISION_new( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prp_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] -GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO*n_vect+j+jj];
+                               prp_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] -GAMMA_Z_SPIN0_VAL*l_pt[(3*GAMMA_Z_SPIN0_CO+1)*n_vect+j+jj];
+                               prp_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] -GAMMA_Z_SPIN0_VAL*l_pt[(3*GAMMA_Z_SPIN0_CO+2)*n_vect+j+jj];
+                               prp_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] -GAMMA_Z_SPIN1_VAL*l_pt[3*GAMMA_Z_SPIN1_CO*n_vect+j+jj];
+                               prp_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] -GAMMA_Z_SPIN1_VAL*l_pt[(3*GAMMA_Z_SPIN1_CO+1)*n_vect+j+jj];
+                               prp_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] -GAMMA_Z_SPIN1_VAL*l_pt[(3*GAMMA_Z_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void prn_Z_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[0] = l_pt[0] +GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO];
     prn_pt[1] = l_pt[1] +GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO+1];
     prn_pt[2] = l_pt[2] +GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO+2];
@@ -216,7 +309,17 @@
     prn_pt[5] = l_pt[5] +GAMMA_Z_SPIN1_VAL*l_pt[3*GAMMA_Z_SPIN1_CO+2];
   }
 
-  static inline void pbp_su3_Z_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void prn_Z_PRECISION_new( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prn_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] +GAMMA_Z_SPIN0_VAL*l_pt[3*GAMMA_Z_SPIN0_CO*n_vect+j+jj];
+                               prn_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] +GAMMA_Z_SPIN0_VAL*l_pt[(3*GAMMA_Z_SPIN0_CO+1)*n_vect+j+jj];
+                               prn_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] +GAMMA_Z_SPIN0_VAL*l_pt[(3*GAMMA_Z_SPIN0_CO+2)*n_vect+j+jj];
+                               prn_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] +GAMMA_Z_SPIN1_VAL*l_pt[3*GAMMA_Z_SPIN1_CO*n_vect+j+jj];
+                               prn_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] +GAMMA_Z_SPIN1_VAL*l_pt[(3*GAMMA_Z_SPIN1_CO+1)*n_vect+j+jj];
+                               prn_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] +GAMMA_Z_SPIN1_VAL*l_pt[(3*GAMMA_Z_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void pbp_su3_Z_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[0];
     l_pt[ 1] -= prp_su3_pt[1];
     l_pt[ 2] -= prp_su3_pt[2];
@@ -231,7 +334,23 @@
     l_pt[11] += GAMMA_Z_SPIN3_VAL*prp_su3_pt[3*GAMMA_Z_SPIN3_CO+2];
   }
 
-  static inline void pbn_su3_Z_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void pbp_su3_Z_PRECISION_new( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prp_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prp_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prp_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prp_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prp_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prp_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] += GAMMA_Z_SPIN2_VAL*prp_su3_pt[3*GAMMA_Z_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] += GAMMA_Z_SPIN2_VAL*prp_su3_pt[(3*GAMMA_Z_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] += GAMMA_Z_SPIN2_VAL*prp_su3_pt[(3*GAMMA_Z_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] += GAMMA_Z_SPIN3_VAL*prp_su3_pt[3*GAMMA_Z_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] += GAMMA_Z_SPIN3_VAL*prp_su3_pt[(3*GAMMA_Z_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] += GAMMA_Z_SPIN3_VAL*prp_su3_pt[(3*GAMMA_Z_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void pbn_su3_Z_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[0];
     l_pt[ 1] -= prn_su3_pt[1];
     l_pt[ 2] -= prn_su3_pt[2];
@@ -246,7 +365,23 @@
     l_pt[11] -= GAMMA_Z_SPIN3_VAL*prn_su3_pt[3*GAMMA_Z_SPIN3_CO+2];
   }
 
-  static inline void prp_Y_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void pbn_su3_Z_PRECISION_new( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prn_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prn_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prn_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prn_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prn_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prn_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] -= GAMMA_Z_SPIN2_VAL*prn_su3_pt[3*GAMMA_Z_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] -= GAMMA_Z_SPIN2_VAL*prn_su3_pt[(3*GAMMA_Z_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] -= GAMMA_Z_SPIN2_VAL*prn_su3_pt[(3*GAMMA_Z_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] -= GAMMA_Z_SPIN3_VAL*prn_su3_pt[3*GAMMA_Z_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] -= GAMMA_Z_SPIN3_VAL*prn_su3_pt[(3*GAMMA_Z_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] -= GAMMA_Z_SPIN3_VAL*prn_su3_pt[(3*GAMMA_Z_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void prp_Y_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[0] = l_pt[0] -GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO];
     prp_pt[1] = l_pt[1] -GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO+1];
     prp_pt[2] = l_pt[2] -GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO+2];
@@ -255,7 +390,17 @@
     prp_pt[5] = l_pt[5] -GAMMA_Y_SPIN1_VAL*l_pt[3*GAMMA_Y_SPIN1_CO+2];
   }
 
-  static inline void prn_Y_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void prp_Y_PRECISION_new( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prp_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] -GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO*n_vect+j+jj];
+                               prp_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] -GAMMA_Y_SPIN0_VAL*l_pt[(3*GAMMA_Y_SPIN0_CO+1)*n_vect+j+jj];
+                               prp_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] -GAMMA_Y_SPIN0_VAL*l_pt[(3*GAMMA_Y_SPIN0_CO+2)*n_vect+j+jj];
+                               prp_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] -GAMMA_Y_SPIN1_VAL*l_pt[3*GAMMA_Y_SPIN1_CO*n_vect+j+jj];
+                               prp_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] -GAMMA_Y_SPIN1_VAL*l_pt[(3*GAMMA_Y_SPIN1_CO+1)*n_vect+j+jj];
+                               prp_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] -GAMMA_Y_SPIN1_VAL*l_pt[(3*GAMMA_Y_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void prn_Y_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[0] = l_pt[0] +GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO];
     prn_pt[1] = l_pt[1] +GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO+1];
     prn_pt[2] = l_pt[2] +GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO+2];
@@ -264,7 +409,17 @@
     prn_pt[5] = l_pt[5] +GAMMA_Y_SPIN1_VAL*l_pt[3*GAMMA_Y_SPIN1_CO+2];
   }
 
-  static inline void pbp_su3_Y_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void prn_Y_PRECISION_new( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prn_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] +GAMMA_Y_SPIN0_VAL*l_pt[3*GAMMA_Y_SPIN0_CO*n_vect+j+jj];
+                               prn_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] +GAMMA_Y_SPIN0_VAL*l_pt[(3*GAMMA_Y_SPIN0_CO+1)*n_vect+j+jj];
+                               prn_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] +GAMMA_Y_SPIN0_VAL*l_pt[(3*GAMMA_Y_SPIN0_CO+2)*n_vect+j+jj];
+                               prn_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] +GAMMA_Y_SPIN1_VAL*l_pt[3*GAMMA_Y_SPIN1_CO*n_vect+j+jj];
+                               prn_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] +GAMMA_Y_SPIN1_VAL*l_pt[(3*GAMMA_Y_SPIN1_CO+1)*n_vect+j+jj];
+                               prn_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] +GAMMA_Y_SPIN1_VAL*l_pt[(3*GAMMA_Y_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void pbp_su3_Y_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[0];
     l_pt[ 1] -= prp_su3_pt[1];
     l_pt[ 2] -= prp_su3_pt[2];
@@ -279,7 +434,23 @@
     l_pt[11] += GAMMA_Y_SPIN3_VAL*prp_su3_pt[3*GAMMA_Y_SPIN3_CO+2];
   }
 
-  static inline void pbn_su3_Y_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void pbp_su3_Y_PRECISION_new( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prp_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prp_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prp_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prp_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prp_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prp_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] += GAMMA_Y_SPIN2_VAL*prp_su3_pt[3*GAMMA_Y_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] += GAMMA_Y_SPIN2_VAL*prp_su3_pt[(3*GAMMA_Y_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] += GAMMA_Y_SPIN2_VAL*prp_su3_pt[(3*GAMMA_Y_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] += GAMMA_Y_SPIN3_VAL*prp_su3_pt[3*GAMMA_Y_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] += GAMMA_Y_SPIN3_VAL*prp_su3_pt[(3*GAMMA_Y_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] += GAMMA_Y_SPIN3_VAL*prp_su3_pt[(3*GAMMA_Y_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void pbn_su3_Y_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[0];
     l_pt[ 1] -= prn_su3_pt[1];
     l_pt[ 2] -= prn_su3_pt[2];
@@ -294,7 +465,23 @@
     l_pt[11] -= GAMMA_Y_SPIN3_VAL*prn_su3_pt[3*GAMMA_Y_SPIN3_CO+2];
   }
 
-  static inline void prp_X_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void pbn_su3_Y_PRECISION_new( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prn_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prn_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prn_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prn_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prn_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prn_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] -= GAMMA_Y_SPIN2_VAL*prn_su3_pt[3*GAMMA_Y_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] -= GAMMA_Y_SPIN2_VAL*prn_su3_pt[(3*GAMMA_Y_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] -= GAMMA_Y_SPIN2_VAL*prn_su3_pt[(3*GAMMA_Y_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] -= GAMMA_Y_SPIN3_VAL*prn_su3_pt[3*GAMMA_Y_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] -= GAMMA_Y_SPIN3_VAL*prn_su3_pt[(3*GAMMA_Y_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] -= GAMMA_Y_SPIN3_VAL*prn_su3_pt[(3*GAMMA_Y_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void prp_X_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[0] = l_pt[0] -GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO];
     prp_pt[1] = l_pt[1] -GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO+1];
     prp_pt[2] = l_pt[2] -GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO+2];
@@ -303,7 +490,17 @@
     prp_pt[5] = l_pt[5] -GAMMA_X_SPIN1_VAL*l_pt[3*GAMMA_X_SPIN1_CO+2];
   }
 
-  static inline void prn_X_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void prp_X_PRECISION_new( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prp_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] -GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO*n_vect+j+jj];
+                               prp_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] -GAMMA_X_SPIN0_VAL*l_pt[(3*GAMMA_X_SPIN0_CO+1)*n_vect+j+jj];
+                               prp_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] -GAMMA_X_SPIN0_VAL*l_pt[(3*GAMMA_X_SPIN0_CO+2)*n_vect+j+jj];
+                               prp_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] -GAMMA_X_SPIN1_VAL*l_pt[3*GAMMA_X_SPIN1_CO*n_vect+j+jj];
+                               prp_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] -GAMMA_X_SPIN1_VAL*l_pt[(3*GAMMA_X_SPIN1_CO+1)*n_vect+j+jj];
+                               prp_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] -GAMMA_X_SPIN1_VAL*l_pt[(3*GAMMA_X_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void prn_X_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[0] = l_pt[0] +GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO];
     prn_pt[1] = l_pt[1] +GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO+1];
     prn_pt[2] = l_pt[2] +GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO+2];
@@ -312,7 +509,17 @@
     prn_pt[5] = l_pt[5] +GAMMA_X_SPIN1_VAL*l_pt[3*GAMMA_X_SPIN1_CO+2];
   }
 
-  static inline void pbp_su3_X_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void prn_X_PRECISION_new( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, prn_pt[0*n_vect+j+jj] = l_pt[0*n_vect+j+jj] +GAMMA_X_SPIN0_VAL*l_pt[3*GAMMA_X_SPIN0_CO*n_vect+j+jj];
+                               prn_pt[1*n_vect+j+jj] = l_pt[1*n_vect+j+jj] +GAMMA_X_SPIN0_VAL*l_pt[(3*GAMMA_X_SPIN0_CO+1)*n_vect+j+jj];
+                               prn_pt[2*n_vect+j+jj] = l_pt[2*n_vect+j+jj] +GAMMA_X_SPIN0_VAL*l_pt[(3*GAMMA_X_SPIN0_CO+2)*n_vect+j+jj];
+                               prn_pt[3*n_vect+j+jj] = l_pt[3*n_vect+j+jj] +GAMMA_X_SPIN1_VAL*l_pt[3*GAMMA_X_SPIN1_CO*n_vect+j+jj];
+                               prn_pt[4*n_vect+j+jj] = l_pt[4*n_vect+j+jj] +GAMMA_X_SPIN1_VAL*l_pt[(3*GAMMA_X_SPIN1_CO+1)*n_vect+j+jj];
+                               prn_pt[5*n_vect+j+jj] = l_pt[5*n_vect+j+jj] +GAMMA_X_SPIN1_VAL*l_pt[(3*GAMMA_X_SPIN1_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void pbp_su3_X_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[0];
     l_pt[ 1] -= prp_su3_pt[1];
     l_pt[ 2] -= prp_su3_pt[2];
@@ -327,7 +534,23 @@
     l_pt[11] += GAMMA_X_SPIN3_VAL*prp_su3_pt[3*GAMMA_X_SPIN3_CO+2];
   }
 
-  static inline void pbn_su3_X_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void pbp_su3_X_PRECISION_new( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prp_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prp_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prp_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prp_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prp_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prp_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] += GAMMA_X_SPIN2_VAL*prp_su3_pt[3*GAMMA_X_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] += GAMMA_X_SPIN2_VAL*prp_su3_pt[(3*GAMMA_X_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] += GAMMA_X_SPIN2_VAL*prp_su3_pt[(3*GAMMA_X_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] += GAMMA_X_SPIN3_VAL*prp_su3_pt[3*GAMMA_X_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] += GAMMA_X_SPIN3_VAL*prp_su3_pt[(3*GAMMA_X_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] += GAMMA_X_SPIN3_VAL*prp_su3_pt[(3*GAMMA_X_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
+  static inline void pbn_su3_X_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[0];
     l_pt[ 1] -= prn_su3_pt[1];
     l_pt[ 2] -= prn_su3_pt[2];
@@ -342,6 +565,22 @@
     l_pt[11] -= GAMMA_X_SPIN3_VAL*prn_su3_pt[3*GAMMA_X_SPIN3_CO+2];
   }
 
+  static inline void pbn_su3_X_PRECISION_new( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, l_pt[ 0*n_vect+j+jj] -= prn_su3_pt[0*n_vect+j+jj];
+                               l_pt[ 1*n_vect+j+jj] -= prn_su3_pt[1*n_vect+j+jj];
+                               l_pt[ 2*n_vect+j+jj] -= prn_su3_pt[2*n_vect+j+jj];
+                               l_pt[ 3*n_vect+j+jj] -= prn_su3_pt[3*n_vect+j+jj];
+                               l_pt[ 4*n_vect+j+jj] -= prn_su3_pt[4*n_vect+j+jj];
+                               l_pt[ 5*n_vect+j+jj] -= prn_su3_pt[5*n_vect+j+jj];
+                               l_pt[ 6*n_vect+j+jj] -= GAMMA_X_SPIN2_VAL*prn_su3_pt[3*GAMMA_X_SPIN2_CO*n_vect+j+jj];
+                               l_pt[ 7*n_vect+j+jj] -= GAMMA_X_SPIN2_VAL*prn_su3_pt[(3*GAMMA_X_SPIN2_CO+1)*n_vect+j+jj];
+                               l_pt[ 8*n_vect+j+jj] -= GAMMA_X_SPIN2_VAL*prn_su3_pt[(3*GAMMA_X_SPIN2_CO+2)*n_vect+j+jj];
+                               l_pt[ 9*n_vect+j+jj] -= GAMMA_X_SPIN3_VAL*prn_su3_pt[3*GAMMA_X_SPIN3_CO*n_vect+j+jj];
+                               l_pt[10*n_vect+j+jj] -= GAMMA_X_SPIN3_VAL*prn_su3_pt[(3*GAMMA_X_SPIN3_CO+1)*n_vect+j+jj];
+                               l_pt[11*n_vect+j+jj] -= GAMMA_X_SPIN3_VAL*prn_su3_pt[(3*GAMMA_X_SPIN3_CO+2)*n_vect+j+jj];)
+  }
+
 //START
 #ifdef HAVE_TM1p1
 
@@ -349,7 +588,7 @@
 #define flav_gamma(k) (3*(k)+6*((k)/2))
 
   // 1 - gamma_T
-  static inline void dprp_T_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void dprp_T_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[ 0] = l_pt[ 0] -GAMMA_T_SPIN0_VAL*l_pt[flav_gamma(GAMMA_T_SPIN0_CO)];
     prp_pt[ 1] = l_pt[ 1] -GAMMA_T_SPIN0_VAL*l_pt[flav_gamma(GAMMA_T_SPIN0_CO)+1];
     prp_pt[ 2] = l_pt[ 2] -GAMMA_T_SPIN0_VAL*l_pt[flav_gamma(GAMMA_T_SPIN0_CO)+2];
@@ -365,7 +604,7 @@
   }
 
   // 1 + gamma_T
-  static inline void dprn_T_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void dprn_T_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[ 0] = l_pt[ 0] +GAMMA_T_SPIN0_VAL*l_pt[flav_gamma(GAMMA_T_SPIN0_CO)];
     prn_pt[ 1] = l_pt[ 1] +GAMMA_T_SPIN0_VAL*l_pt[flav_gamma(GAMMA_T_SPIN0_CO)+1];
     prn_pt[ 2] = l_pt[ 2] +GAMMA_T_SPIN0_VAL*l_pt[flav_gamma(GAMMA_T_SPIN0_CO)+2];
@@ -381,7 +620,7 @@
   }
 
   // - (1 - gamma_T)
-  static inline void dpbp_su3_T_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbp_su3_T_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[ 0];
     l_pt[ 1] -= prp_su3_pt[ 1];
     l_pt[ 2] -= prp_su3_pt[ 2];
@@ -409,7 +648,7 @@
   }
 
   // -(1 + gamma_T)
-  static inline void dpbn_su3_T_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbn_su3_T_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[ 0];
     l_pt[ 1] -= prn_su3_pt[ 1];
     l_pt[ 2] -= prn_su3_pt[ 2];
@@ -438,7 +677,7 @@
 
 
   // 1 - gamma_Z
-  static inline void dprp_Z_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void dprp_Z_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[ 0] = l_pt[ 0] -GAMMA_Z_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Z_SPIN0_CO)];
     prp_pt[ 1] = l_pt[ 1] -GAMMA_Z_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Z_SPIN0_CO)+1];
     prp_pt[ 2] = l_pt[ 2] -GAMMA_Z_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Z_SPIN0_CO)+2];
@@ -454,7 +693,7 @@
   }
 
   // 1 + gamma_Z
-  static inline void dprn_Z_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void dprn_Z_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[ 0] = l_pt[ 0] +GAMMA_Z_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Z_SPIN0_CO)];
     prn_pt[ 1] = l_pt[ 1] +GAMMA_Z_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Z_SPIN0_CO)+1];
     prn_pt[ 2] = l_pt[ 2] +GAMMA_Z_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Z_SPIN0_CO)+2];
@@ -470,7 +709,7 @@
   }
 
   // - (1 - gamma_Z)
-  static inline void dpbp_su3_Z_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbp_su3_Z_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[ 0];
     l_pt[ 1] -= prp_su3_pt[ 1];
     l_pt[ 2] -= prp_su3_pt[ 2];
@@ -498,7 +737,7 @@
   }
 
   // -(1 + gamma_Z)
-  static inline void dpbn_su3_Z_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbn_su3_Z_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[ 0];
     l_pt[ 1] -= prn_su3_pt[ 1];
     l_pt[ 2] -= prn_su3_pt[ 2];
@@ -527,7 +766,7 @@
 
 
   // 1 - gamma_Y
-  static inline void dprp_Y_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void dprp_Y_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[ 0] = l_pt[ 0] -GAMMA_Y_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Y_SPIN0_CO)];
     prp_pt[ 1] = l_pt[ 1] -GAMMA_Y_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Y_SPIN0_CO)+1];
     prp_pt[ 2] = l_pt[ 2] -GAMMA_Y_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Y_SPIN0_CO)+2];
@@ -543,7 +782,7 @@
   }
 
   // 1 + gamma_Y
-  static inline void dprn_Y_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void dprn_Y_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[ 0] = l_pt[ 0] +GAMMA_Y_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Y_SPIN0_CO)];
     prn_pt[ 1] = l_pt[ 1] +GAMMA_Y_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Y_SPIN0_CO)+1];
     prn_pt[ 2] = l_pt[ 2] +GAMMA_Y_SPIN0_VAL*l_pt[flav_gamma(GAMMA_Y_SPIN0_CO)+2];
@@ -559,7 +798,7 @@
   }
 
   // - (1 - gamma_Y)
-  static inline void dpbp_su3_Y_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbp_su3_Y_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[ 0];
     l_pt[ 1] -= prp_su3_pt[ 1];
     l_pt[ 2] -= prp_su3_pt[ 2];
@@ -587,7 +826,7 @@
   }
 
   // -(1 + gamma_Y)
-  static inline void dpbn_su3_Y_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbn_su3_Y_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[ 0];
     l_pt[ 1] -= prn_su3_pt[ 1];
     l_pt[ 2] -= prn_su3_pt[ 2];
@@ -616,7 +855,7 @@
 
 
   // 1 - gamma_X
-  static inline void dprp_X_PRECISION( const vector_PRECISION prp_pt, const vector_PRECISION l_pt ) {
+  static inline void dprp_X_PRECISION( const buffer_PRECISION prp_pt, const buffer_PRECISION l_pt ) {
     prp_pt[ 0] = l_pt[ 0] -GAMMA_X_SPIN0_VAL*l_pt[flav_gamma(GAMMA_X_SPIN0_CO)];
     prp_pt[ 1] = l_pt[ 1] -GAMMA_X_SPIN0_VAL*l_pt[flav_gamma(GAMMA_X_SPIN0_CO)+1];
     prp_pt[ 2] = l_pt[ 2] -GAMMA_X_SPIN0_VAL*l_pt[flav_gamma(GAMMA_X_SPIN0_CO)+2];
@@ -632,7 +871,7 @@
   }
 
   // 1 + gamma_X
-  static inline void dprn_X_PRECISION( const vector_PRECISION prn_pt, const vector_PRECISION l_pt ) {
+  static inline void dprn_X_PRECISION( const buffer_PRECISION prn_pt, const buffer_PRECISION l_pt ) {
     prn_pt[ 0] = l_pt[ 0] +GAMMA_X_SPIN0_VAL*l_pt[flav_gamma(GAMMA_X_SPIN0_CO)];
     prn_pt[ 1] = l_pt[ 1] +GAMMA_X_SPIN0_VAL*l_pt[flav_gamma(GAMMA_X_SPIN0_CO)+1];
     prn_pt[ 2] = l_pt[ 2] +GAMMA_X_SPIN0_VAL*l_pt[flav_gamma(GAMMA_X_SPIN0_CO)+2];
@@ -648,7 +887,7 @@
   }
 
   // - (1 - gamma_X)
-  static inline void dpbp_su3_X_PRECISION( const vector_PRECISION prp_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbp_su3_X_PRECISION( const buffer_PRECISION prp_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prp_su3_pt[ 0];
     l_pt[ 1] -= prp_su3_pt[ 1];
     l_pt[ 2] -= prp_su3_pt[ 2];
@@ -676,7 +915,7 @@
   }
 
   // -(1 + gamma_X)
-  static inline void dpbn_su3_X_PRECISION( const vector_PRECISION prn_su3_pt, const vector_PRECISION l_pt ) {
+  static inline void dpbn_su3_X_PRECISION( const buffer_PRECISION prn_su3_pt, const buffer_PRECISION l_pt ) {
     l_pt[ 0] -= prn_su3_pt[ 0];
     l_pt[ 1] -= prn_su3_pt[ 1];
     l_pt[ 2] -= prn_su3_pt[ 2];
@@ -706,7 +945,7 @@
 #endif
 //END
 
-  static inline void twospin_p_T_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_p_T_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -733,7 +972,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin2_p_T_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin2_p_T_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] = in[ 0];
     out_spin0and1[ 1] = in[ 1];
     out_spin0and1[ 2] = in[ 2];
@@ -760,7 +999,7 @@
     out_spin2and3[11] = in[11];
   }
 
-  static inline void twospin_n_T_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_n_T_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -787,7 +1026,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin_p_Z_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_p_Z_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -814,7 +1053,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin2_p_Z_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin2_p_Z_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] = in[ 0];
     out_spin0and1[ 1] = in[ 1];
     out_spin0and1[ 2] = in[ 2];
@@ -841,7 +1080,7 @@
     out_spin2and3[11] = in[11];
   }
 
-  static inline void twospin_n_Z_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_n_Z_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -868,7 +1107,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin_p_Y_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_p_Y_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -895,7 +1134,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin2_p_Y_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin2_p_Y_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] = in[ 0];
     out_spin0and1[ 1] = in[ 1];
     out_spin0and1[ 2] = in[ 2];
@@ -922,7 +1161,7 @@
     out_spin2and3[11] = in[11];
   }
 
-  static inline void twospin_n_Y_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_n_Y_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -949,7 +1188,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin_p_X_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_p_X_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -976,7 +1215,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void twospin2_p_X_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin2_p_X_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] = in[ 0];
     out_spin0and1[ 1] = in[ 1];
     out_spin0and1[ 2] = in[ 2];
@@ -1003,7 +1242,7 @@
     out_spin2and3[11] = in[11];
   }
 
-  static inline void twospin_n_X_PRECISION( const vector_PRECISION out_spin0and1, const vector_PRECISION out_spin2and3, const vector_PRECISION in ) {
+  static inline void twospin_n_X_PRECISION( const buffer_PRECISION out_spin0and1, const buffer_PRECISION out_spin2and3, const buffer_PRECISION in ) {
     out_spin0and1[ 0] -= in[ 0];
     out_spin0and1[ 1] -= in[ 1];
     out_spin0and1[ 2] -= in[ 2];
@@ -1030,7 +1269,7 @@
     out_spin2and3[11] -= in[11];
   }
 
-  static inline void doublet_site_clover_PRECISION( const vector_PRECISION eta, const vector_PRECISION phi, const config_PRECISION clover ) {
+  static inline void doublet_site_clover_PRECISION( const buffer_PRECISION eta, const buffer_PRECISION phi, const config_PRECISION clover ) {
     // diagonal
     eta[ 0] = clover[ 0]*phi[ 0];
     eta[ 1] = clover[ 1]*phi[ 1];
@@ -1182,7 +1421,7 @@
     eta[23] += conj_PRECISION(clover[41])*phi[22];
   }
 
-  static inline void spin0and1_site_clover_PRECISION( const vector_PRECISION eta, const vector_PRECISION phi, const config_PRECISION clover ) {
+  static inline void spin0and1_site_clover_PRECISION( const buffer_PRECISION eta, const buffer_PRECISION phi, const config_PRECISION clover ) {
     // diagonal
     eta[ 0] = clover[ 0]*phi[ 0];
     eta[ 1] = clover[ 1]*phi[ 1];
@@ -1229,7 +1468,7 @@
     eta[5] += conj_PRECISION(clover[26])*phi[4];
   }
 
-  static inline void spin2and3_site_clover_PRECISION( const vector_PRECISION eta, const vector_PRECISION phi, const config_PRECISION clover ) {
+  static inline void spin2and3_site_clover_PRECISION( const buffer_PRECISION eta, const buffer_PRECISION phi, const config_PRECISION clover ) {
     // diagonal
     eta[ 0] = _COMPLEX_PRECISION_ZERO;
     eta[ 1] = _COMPLEX_PRECISION_ZERO;
@@ -1276,7 +1515,7 @@
     eta[11] += conj_PRECISION(clover[41])*phi[10];
   }
   
-  static inline void site_clover_PRECISION( const vector_PRECISION eta, const vector_PRECISION phi, const config_PRECISION clover ) {
+  static inline void site_clover_PRECISION( const buffer_PRECISION eta, const buffer_PRECISION phi, const config_PRECISION clover ) {
     // diagonal
     eta[ 0] = clover[ 0]*phi[ 0];
     eta[ 1] = clover[ 1]*phi[ 1];
@@ -1353,5 +1592,86 @@
     eta[11] += conj_PRECISION(clover[40])*phi[ 9];
     eta[11] += conj_PRECISION(clover[41])*phi[10];
   }
-  
+
+
+
+  static inline void site_clover_PRECISION_new( const buffer_PRECISION eta, const buffer_PRECISION phi, const config_PRECISION clover ) {
+    int n_vect = g.num_rhs_vect, j, jj;
+    VECTOR_LOOP(j, n_vect, jj, // diagonal
+                               eta[ 0*n_vect+j+jj] = clover[ 0]*phi[ 0*n_vect+j+jj];
+                               eta[ 1*n_vect+j+jj] = clover[ 1]*phi[ 1*n_vect+j+jj];
+                               eta[ 2*n_vect+j+jj] = clover[ 2]*phi[ 2*n_vect+j+jj];
+                               eta[ 3*n_vect+j+jj] = clover[ 3]*phi[ 3*n_vect+j+jj];
+                               eta[ 4*n_vect+j+jj] = clover[ 4]*phi[ 4*n_vect+j+jj];
+                               eta[ 5*n_vect+j+jj] = clover[ 5]*phi[ 5*n_vect+j+jj];
+                               eta[ 6*n_vect+j+jj] = clover[ 6]*phi[ 6*n_vect+j+jj];
+                               eta[ 7*n_vect+j+jj] = clover[ 7]*phi[ 7*n_vect+j+jj];
+                               eta[ 8*n_vect+j+jj] = clover[ 8]*phi[ 8*n_vect+j+jj];
+                               eta[ 9*n_vect+j+jj] = clover[ 9]*phi[ 9*n_vect+j+jj];
+                               eta[10*n_vect+j+jj] = clover[10]*phi[10*n_vect+j+jj];
+                               eta[11*n_vect+j+jj] = clover[11]*phi[11*n_vect+j+jj];
+                               // spin 0 and 1, row major
+                               eta[0*n_vect+j+jj] += clover[12]*phi[1*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += clover[13]*phi[2*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += clover[14]*phi[3*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += clover[15]*phi[4*n_vect+j+jj];
+                               eta[0*n_vect+j+jj] += clover[16]*phi[5*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += clover[17]*phi[2*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += clover[18]*phi[3*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += clover[19]*phi[4*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += clover[20]*phi[5*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += clover[21]*phi[3*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += clover[22]*phi[4*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += clover[23]*phi[5*n_vect+j+jj];
+                               eta[3*n_vect+j+jj] += clover[24]*phi[4*n_vect+j+jj];
+                               eta[3*n_vect+j+jj] += clover[25]*phi[5*n_vect+j+jj];
+                               eta[4*n_vect+j+jj] += clover[26]*phi[5*n_vect+j+jj];
+                               eta[1*n_vect+j+jj] += conj_PRECISION(clover[12])*phi[0*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += conj_PRECISION(clover[13])*phi[0*n_vect+j+jj];
+                               eta[3*n_vect+j+jj] += conj_PRECISION(clover[14])*phi[0*n_vect+j+jj];
+                               eta[4*n_vect+j+jj] += conj_PRECISION(clover[15])*phi[0*n_vect+j+jj];
+                               eta[5*n_vect+j+jj] += conj_PRECISION(clover[16])*phi[0*n_vect+j+jj];
+                               eta[2*n_vect+j+jj] += conj_PRECISION(clover[17])*phi[1*n_vect+j+jj];
+                               eta[3*n_vect+j+jj] += conj_PRECISION(clover[18])*phi[1*n_vect+j+jj];
+                               eta[4*n_vect+j+jj] += conj_PRECISION(clover[19])*phi[1*n_vect+j+jj];
+                               eta[5*n_vect+j+jj] += conj_PRECISION(clover[20])*phi[1*n_vect+j+jj];
+                               eta[3*n_vect+j+jj] += conj_PRECISION(clover[21])*phi[2*n_vect+j+jj];
+                               eta[4*n_vect+j+jj] += conj_PRECISION(clover[22])*phi[2*n_vect+j+jj];
+                               eta[5*n_vect+j+jj] += conj_PRECISION(clover[23])*phi[2*n_vect+j+jj];
+                               eta[4*n_vect+j+jj] += conj_PRECISION(clover[24])*phi[3*n_vect+j+jj];
+                               eta[5*n_vect+j+jj] += conj_PRECISION(clover[25])*phi[3*n_vect+j+jj];
+                               eta[5*n_vect+j+jj] += conj_PRECISION(clover[26])*phi[4*n_vect+j+jj];
+                               // spin 2 and 3, row major
+                               eta[ 6*n_vect+j+jj] += clover[27]*phi[ 7*n_vect+j+jj];
+                               eta[ 6*n_vect+j+jj] += clover[28]*phi[ 8*n_vect+j+jj];
+                               eta[ 6*n_vect+j+jj] += clover[29]*phi[ 9*n_vect+j+jj];
+                               eta[ 6*n_vect+j+jj] += clover[30]*phi[10*n_vect+j+jj];
+                               eta[ 6*n_vect+j+jj] += clover[31]*phi[11*n_vect+j+jj];
+                               eta[ 7*n_vect+j+jj] += clover[32]*phi[ 8*n_vect+j+jj];
+                               eta[ 7*n_vect+j+jj] += clover[33]*phi[ 9*n_vect+j+jj];
+                               eta[ 7*n_vect+j+jj] += clover[34]*phi[10*n_vect+j+jj];
+                               eta[ 7*n_vect+j+jj] += clover[35]*phi[11*n_vect+j+jj];
+                               eta[ 8*n_vect+j+jj] += clover[36]*phi[ 9*n_vect+j+jj];
+                               eta[ 8*n_vect+j+jj] += clover[37]*phi[10*n_vect+j+jj];
+                               eta[ 8*n_vect+j+jj] += clover[38]*phi[11*n_vect+j+jj];
+                               eta[ 9*n_vect+j+jj] += clover[39]*phi[10*n_vect+j+jj];
+                               eta[ 9*n_vect+j+jj] += clover[40]*phi[11*n_vect+j+jj];
+                               eta[10*n_vect+j+jj] += clover[41]*phi[11*n_vect+j+jj];
+                               eta[ 7*n_vect+j+jj] += conj_PRECISION(clover[27])*phi[ 6*n_vect+j+jj];
+                               eta[ 8*n_vect+j+jj] += conj_PRECISION(clover[28])*phi[ 6*n_vect+j+jj];
+                               eta[ 9*n_vect+j+jj] += conj_PRECISION(clover[29])*phi[ 6*n_vect+j+jj];
+                               eta[10*n_vect+j+jj] += conj_PRECISION(clover[30])*phi[ 6*n_vect+j+jj];
+                               eta[11*n_vect+j+jj] += conj_PRECISION(clover[31])*phi[ 6*n_vect+j+jj];
+                               eta[ 8*n_vect+j+jj] += conj_PRECISION(clover[32])*phi[ 7*n_vect+j+jj];
+                               eta[ 9*n_vect+j+jj] += conj_PRECISION(clover[33])*phi[ 7*n_vect+j+jj];
+                               eta[10*n_vect+j+jj] += conj_PRECISION(clover[34])*phi[ 7*n_vect+j+jj];
+                               eta[11*n_vect+j+jj] += conj_PRECISION(clover[35])*phi[ 7*n_vect+j+jj];
+                               eta[ 9*n_vect+j+jj] += conj_PRECISION(clover[36])*phi[ 8*n_vect+j+jj];
+                               eta[10*n_vect+j+jj] += conj_PRECISION(clover[37])*phi[ 8*n_vect+j+jj];
+                               eta[11*n_vect+j+jj] += conj_PRECISION(clover[38])*phi[ 8*n_vect+j+jj];
+                               eta[10*n_vect+j+jj] += conj_PRECISION(clover[39])*phi[ 9*n_vect+j+jj];
+                               eta[11*n_vect+j+jj] += conj_PRECISION(clover[40])*phi[ 9*n_vect+j+jj];
+                               eta[11*n_vect+j+jj] += conj_PRECISION(clover[41])*phi[10*n_vect+j+jj];)
+  }
+ 
 #endif 

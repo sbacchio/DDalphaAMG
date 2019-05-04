@@ -44,14 +44,14 @@ void compute_clover_term ( SU3_storage U, level_struct *l ) {
   
 #ifdef HAVE_TM
   if ( g.mu + g.mu_even_shift == 0 && g.mu + g.mu_odd_shift == 0 )
-    vector_double_define( op->tm_term, _COMPLEX_double_ZERO, 0, l->inner_vector_size, l );
+    buffer_double_define( op->tm_term, _COMPLEX_double_ZERO, 0, l->inner_vector_size, l );
   else
     tm_term_double_setup( g.mu, g.mu_even_shift, g.mu_odd_shift, op, l, no_threading );  
 #endif
 
 #ifdef HAVE_TM1p1
   if ( g.epsbar == 0 && g.epsbar_ig5_even_shift == 0 && g.epsbar_ig5_odd_shift == 0 ) 
-    vector_double_define( op->epsbar_term, _COMPLEX_double_ZERO, 0, l->inner_vector_size, l );
+    buffer_double_define( op->epsbar_term, _COMPLEX_double_ZERO, 0, l->inner_vector_size, l );
   else
     epsbar_term_double_setup( g.epsbar, g.epsbar_ig5_even_shift, g.epsbar_ig5_odd_shift, op, l, no_threading );  
 #endif
@@ -86,7 +86,7 @@ void compute_clover_term ( SU3_storage U, level_struct *l ) {
     mat_free( &Qstore, 3 );
     spin_free( 4, 4 );
   } else {
-    vector_double_define( op->clover, 4+op->m0, 0, l->inner_vector_size, l );
+    buffer_double_define( op->clover, 4+op->m0, 0, l->inner_vector_size, l );
   }
 }
 
@@ -436,7 +436,7 @@ void SU3_ghost_update( SU3_storage *U, level_struct *l ) {
   
   int t, z, y, x, mu, nu, *ll = l->local_lattice, ls[4], le[4];
   long int i, j, send_size, max_size;
-  vector_double buffer1 = NULL, buffer2 = NULL, buffer3 = NULL, buffer4 = NULL;
+  buffer_double buffer1 = NULL, buffer2 = NULL, buffer3 = NULL, buffer4 = NULL;
 
   max_size = 0;
   for ( mu=0; mu<4; mu++ ) {
@@ -528,11 +528,11 @@ void SU3_ghost_update( SU3_storage *U, level_struct *l ) {
     send_size = i;
     ASSERT(send_size<=max_size);
   }
-  
-  FREE( buffer1, complex_double, max_size );
-  FREE( buffer2, complex_double, max_size );
-  FREE( buffer3, complex_double, max_size );
+  FREE( buffer1, complex_double, max_size );		
+  FREE( buffer2, complex_double, max_size );		
+  FREE( buffer3, complex_double, max_size );		
   FREE( buffer4, complex_double, max_size );
+
 }
 
 

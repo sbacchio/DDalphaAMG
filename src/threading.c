@@ -116,12 +116,8 @@ void setup_no_threading(struct Thread *no_threading, struct level_struct *l)
 void compute_core_start_end(int start, int end, int *core_start, int *core_end,
         struct level_struct *l, struct Thread *threading)
 {
-#ifdef SSE
-    int min_per_core = 2*l->num_lattice_site_var;
-#else
     // due to loop unrolling in low level functions
     int min_per_core = 3*40;
-#endif
 //     printf0("min_per_core = %d\n", min_per_core );
     compute_core_start_end_custom(start, end, core_start, core_end, l, threading, min_per_core);
 }

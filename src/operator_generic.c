@@ -29,12 +29,8 @@ void operator_PRECISION_init( operator_PRECISION_struct *op ) {
   op->backward_neighbor_table = NULL;
   op->translation_table = NULL;
   op->D = NULL;
-  op->D_vectorized = NULL;
-  op->D_transformed_vectorized = NULL;
   op->clover = NULL;
   op->clover_oo_inv = NULL;
-  op->clover_vectorized = NULL;
-  op->clover_oo_inv_vectorized = NULL;
   op->m0 = 0;
 #ifdef HAVE_TM
   op->mu = 0;
@@ -49,8 +45,6 @@ void operator_PRECISION_init( operator_PRECISION_struct *op ) {
   op->epsbar_ig5_odd_shift = 0;
   op->epsbar_term = NULL;
   op->clover_doublet_oo_inv = NULL;
-  op->clover_doublet_vectorized = NULL;
-  op->clover_doublet_oo_inv_vectorized = NULL;
 #endif
   
   for ( int mu=0; mu<4; mu++ )
@@ -71,7 +65,7 @@ void operator_PRECISION_alloc_projection_buffers( operator_PRECISION_struct *op,
   // when used as preconditioner we usually do not need the projection buffers, unless
   // g.method >= 4: then oddeven_setup_float() is called in init.c, method_setup().
   if ( l->depth == 0 ) {
-    int its = (l->num_lattice_site_var/2)*l->num_lattice_sites;
+    int its = (l->num_lattice_site_var/2)*l->num_lattice_sites*g.num_rhs_vect;
 #ifdef HAVE_TM1p1
     its *= 2;
 #endif
@@ -83,7 +77,7 @@ void operator_PRECISION_alloc_projection_buffers( operator_PRECISION_struct *op,
 void operator_PRECISION_free_projection_buffers( operator_PRECISION_struct *op, level_struct *l ) {
 
   if ( l->depth == 0 ) {
-    int its = (l->num_lattice_site_var/2)*l->num_lattice_sites;
+    int its = (l->num_lattice_site_var/2)*l->num_lattice_sites*g.num_rhs_vect;
 #ifdef HAVE_TM1p1
     its *= 2;
 #endif
@@ -144,8 +138,6 @@ void operator_PRECISION_alloc( operator_PRECISION_struct *op, const int type, le
   MALLOC( op->translation_table, int, l->num_inner_lattice_sites );
 
   if ( type == _SCHWARZ && l->depth == 0 && g.odd_even ) {
-#ifndef OPTIMIZED_SELF_COUPLING_PRECISION
-
     if( g.csw ) {
 #ifdef HAVE_TM //we use LU here
       MALLOC( op->clover_oo_inv, complex_PRECISION, 72*(l->num_inner_lattice_sites/2+1) );
@@ -155,15 +147,6 @@ void operator_PRECISION_alloc( operator_PRECISION_struct *op, const int type, le
     }
 #ifdef HAVE_TM1p1
     MALLOC( op->clover_doublet_oo_inv, complex_PRECISION, 12*12*2*(l->num_inner_lattice_sites/2+1) );
-#endif
-
-#else
-    if( g.csw )
-      MALLOC_HUGEPAGES( op->clover_oo_inv_vectorized, PRECISION, 144*(l->num_inner_lattice_sites/2+1), 4*SIMD_LENGTH_PRECISION );
-#ifdef HAVE_TM1p1
-    MALLOC_HUGEPAGES( op->clover_doublet_oo_inv_vectorized, PRECISION, 2*2*144*(l->num_inner_lattice_sites/2+1), 4*SIMD_LENGTH_PRECISION );
-#endif
-
 #endif
   }  
 
@@ -224,8 +207,6 @@ void operator_PRECISION_free( operator_PRECISION_struct *op, const int type, lev
   FREE( op->tm_term, complex_PRECISION, block_site_size*l->num_inner_lattice_sites );
 #endif
   if ( type == _SCHWARZ && l->depth == 0 && g.odd_even ) {
-#ifndef OPTIMIZED_SELF_COUPLING_PRECISION
-
     if( g.csw ) {
 #ifdef HAVE_TM //we use LU here
       FREE( op->clover_oo_inv, complex_PRECISION, 72*(l->num_inner_lattice_sites/2+1) );
@@ -235,15 +216,6 @@ void operator_PRECISION_free( operator_PRECISION_struct *op, const int type, lev
     }
 #ifdef HAVE_TM1p1
     FREE( op->clover_doublet_oo_inv, complex_PRECISION, 12*12*2*(l->num_inner_lattice_sites/2+1) );
-#endif
-
-#else
-    if( g.csw )
-      FREE_HUGEPAGES( op->clover_oo_inv_vectorized, PRECISION, 144*(l->num_inner_lattice_sites/2+1) );
-#ifdef HAVE_TM1p1
-    FREE_HUGEPAGES( op->clover_doublet_oo_inv_vectorized, PRECISION, 2*2*144*(l->num_inner_lattice_sites/2+1) );
-#endif
-
 #endif
   }  
 
@@ -338,45 +310,9 @@ void operator_PRECISION_set_couplings( operator_PRECISION_struct *op, level_stru
 }
 
 void operator_PRECISION_set_neighbor_couplings( operator_PRECISION_struct *op, level_struct *l ) {
-
-#ifdef OPTIMIZED_NEIGHBOR_COUPLING_PRECISION
-  int i, n = 2*l->num_lattice_sites - l->num_inner_lattice_sites;
-
-  for ( i=0; i<n; i++ ) {
-    PRECISION *D_vectorized = op->D_vectorized + 96*i;
-    PRECISION *D_transformed_vectorized = op->D_transformed_vectorized + 96*i;
-    complex_PRECISION *D_pt = op->D + 36*i;
-    for ( int mu=0; mu<4; mu++ )
-      set_PRECISION_D_vectorized( D_vectorized+24*mu, D_transformed_vectorized+24*mu, D_pt+9*mu );
-  }
-#endif
-
 }
 
 void operator_PRECISION_set_self_couplings( operator_PRECISION_struct *op, level_struct *l ) {
-
-#ifdef OPTIMIZED_SELF_COUPLING_PRECISION
-  int i, n = l->num_inner_lattice_sites;
-  
-  if ( g.csw != 0 )
-    for ( i=0; i<n; i++ ) {
-      PRECISION *clover_vectorized_pt = op->clover_vectorized + 144*i;
-      config_PRECISION clover_pt = op->clover + 42*i;
-      sse_set_clover_PRECISION( clover_vectorized_pt, clover_pt );
-#ifdef HAVE_TM1p1
-      PRECISION *clover_doublet_vectorized_pt = op->clover_doublet_vectorized + 288*i;
-      sse_set_clover_doublet_PRECISION( clover_doublet_vectorized_pt, clover_pt );
-#endif
-#ifdef HAVE_TM
-      config_PRECISION tm_term_pt = op->tm_term + 12*i;
-      sse_add_diagonal_clover_PRECISION( clover_vectorized_pt, tm_term_pt );
-#ifdef HAVE_TM1p1
-      sse_add_diagonal_clover_doublet_PRECISION( clover_doublet_vectorized_pt, tm_term_pt );
-#endif
-#endif
-    }
-#endif
-  
 }
 
 void operator_PRECISION_test_routine( operator_PRECISION_struct *op, level_struct *l, struct Thread *threading ) {
@@ -390,44 +326,54 @@ void operator_PRECISION_test_routine( operator_PRECISION_struct *op, level_struc
 * If enabled, also tests odd even preconditioning.
 *********************************************************************************/ 
 
-  int ivs = l->inner_vector_size;
-  double diff;
+  int ivs = l->inner_vector_size, n_vect=g.num_rhs_vect;
+  double diff, diff1[n_vect], diff2[n_vect];
   
-  vector_double vd1=NULL, vd2, vd3, vd4;
-  vector_PRECISION vp1=NULL, vp2;
+  vector_double vd[4];
+  vector_PRECISION vp[2];
 
-  PUBLIC_MALLOC( vd1, complex_double, 4*ivs );
-  PUBLIC_MALLOC( vp1, complex_PRECISION, 2*ivs );
-
-  vd2 = vd1 + ivs; vd3 = vd2 + ivs; vd4 = vd3 + ivs; vp2 = vp1 + ivs;
+  for(int i=0; i<4; i++){
+    vector_double_init( &vd[i] );
+    vector_double_alloc( &vd[i], _INNER, n_vect, l, threading );
+  }
+  
+  for(int i=0; i<2; i++){
+    vector_PRECISION_init( &vp[i] );
+    vector_PRECISION_alloc( &vp[i], _INNER, n_vect, l, threading );
+  }
 
   START_LOCKED_MASTER(threading)
   
-  vector_double_define_random( vd1, 0, l->inner_vector_size, l );
-  apply_operator_double( vd2, vd1, &(g.p), l, no_threading );
-  
-  trans_PRECISION( vp1, vd1, op->translation_table, l, no_threading );
-  apply_operator_PRECISION( vp2, vp1, &(l->p_PRECISION), l, no_threading );
-  trans_back_PRECISION( vd3, vp2, op->translation_table, l, no_threading );
-  
-  vector_double_minus( vd4, vd3, vd2, 0, l->inner_vector_size, l );
-  diff = global_norm_double( vd4, 0, ivs, l, no_threading )/
-    global_norm_double( vd3, 0, ivs, l, no_threading );
+  //vector_double_define_random( &vd[0], 0, l->inner_vector_size, l );
+  vector_double_define_random_new( &vd[0], l, no_threading ); 
+  apply_operator_double( &vd[1], &vd[0], &(g.p), l, no_threading );
 
-  test0_PRECISION("depth: %d, correctness of schwarz PRECISION Dirac operator: %le\n", l->depth, diff );
+  trans_PRECISION_new( &vp[0], &vd[0], op->translation_table, l, no_threading );
+  apply_operator_PRECISION( &vp[1], &vp[0], &(l->p_PRECISION), l, no_threading );
+  trans_back_PRECISION_new( &vd[2], &vp[1], op->translation_table, l, no_threading );
+  
+  //vector_double_minus( &vd[3], &vd[2], &vd[1], 0, l->inner_vector_size, l );
+  vector_double_minus_new( &vd[3], &vd[2], &vd[1], l, no_threading );
+  //diff = global_norm_double( &vd[3], 0, ivs, l, no_threading )/
+  //    global_norm_double( &vd[2], 0, ivs, l, no_threading );
+  global_norm_double_new( diff1, &vd[3], l, no_threading );
+  global_norm_double_new( diff2, &vd[2], l, no_threading );
+  
+  for(int i=0; i<n_vect; i++)
+    test0_PRECISION("depth: %d, correctness of schwarz PRECISION Dirac operator: %le\n", l->depth, diff1[i]/diff2[i] );
   END_LOCKED_MASTER(threading)
 
   if(threading->n_core > 1) {
-    apply_operator_PRECISION( vp2, vp1, &(l->p_PRECISION), l, threading );
+    apply_operator_PRECISION( &vp[1], &vp[0], &(l->p_PRECISION), l, threading );
 
     SYNC_MASTER_TO_ALL(threading)
     SYNC_CORES(threading)
 
     START_LOCKED_MASTER(threading)
-    trans_back_PRECISION( vd3, vp2, op->translation_table, l, no_threading );
-    vector_double_minus( vd4, vd3, vd2, 0, l->inner_vector_size, l );
-    diff = global_norm_double( vd4, 0, ivs, l, no_threading ) /
-      global_norm_double( vd3, 0, ivs, l, no_threading );
+    trans_back_PRECISION( &vd[2], &vp[1], op->translation_table, l, no_threading );
+    vector_double_minus( &vd[3], &vd[2], &vd[1], 0, l->inner_vector_size, l );
+    diff = global_norm_double( &vd[3], 0, ivs, l, no_threading ) /
+      global_norm_double( &vd[2], 0, ivs, l, no_threading );
 
     if ( diff > EPS_PRECISION )
       printf0("\x1b[31m");
@@ -438,9 +384,14 @@ void operator_PRECISION_test_routine( operator_PRECISION_struct *op, level_struc
 
     END_LOCKED_MASTER(threading) 
   }    
-  
-  PUBLIC_FREE( vd1, complex_double, 4*ivs );
-  PUBLIC_FREE( vp1, complex_PRECISION, 2*ivs );
+
+  for(int i=0; i<4; i++){
+    vector_double_free( &vd[i], l, threading );
+  }
+
+  for(int i=0; i<2; i++){
+    vector_PRECISION_free( &vp[i], l, threading );
+  }
 
   START_LOCKED_MASTER(threading)
   if ( g.method >=4 && g.odd_even )

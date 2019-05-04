@@ -50,6 +50,11 @@ void test_routine( level_struct *l, struct Thread *threading ) {
       if ( g.method > 0 && g.method < 4 && g.odd_even ) block_oddeven_double_test( l, threading );
     }
     
+ /*   if ( g.mixed_precision )
+      vector_float_test_routine( l, threading );
+    else
+      vector_double_test_routine( l, threading );
+*/
     if ( g.interpolation && g.method > 0 ) {
       if ( g.mixed_precision )
         coarse_operator_float_test_routine( l, threading );

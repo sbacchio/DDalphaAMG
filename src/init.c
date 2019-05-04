@@ -152,22 +152,26 @@ void method_setup( vector_double *V, level_struct *l, struct Thread *threading )
 #ifdef INIT_ONE_PREC
     if ( g.mixed_precision == 2 ) {
 #endif
-      fgmres_MP_struct_alloc( g.restart, g.max_restart, l->inner_vector_size,
+      fgmres_MP_struct_alloc( g.restart, g.max_restart, _INNER,
                               g.tol, _RIGHT, vcycle_float, &(g.p_MP), l );
       g.p.op = &(g.op_double);
 #if defined(INIT_ONE_PREC) && (defined (DEBUG) || defined (TEST_VECTOR_ANALYSIS))
 #ifdef HAVE_TM1p1
-      MALLOC( g.p.b, complex_double, 2*l->inner_vector_size );
-      MALLOC( g.p.x, complex_double, 2*l->inner_vector_size );
+      vector_double_alloc( &(g.p.b), _INNER, 2*g.num_rhs_vect, l, no_threading );
+      vector_double_alloc( &(g.p.x), _INNER, 2*g.num_rhs_vect, l, no_threading );
+      //MALLOC( g.p.b, complex_double, 2*l->inner_vector_size );
+      //MALLOC( g.p.x, complex_double, 2*l->inner_vector_size );
 #else
-      MALLOC( g.p.b, complex_double, l->inner_vector_size );
-      MALLOC( g.p.x, complex_double, l->inner_vector_size );
+      vector_double_alloc( &(g.p.b), _INNER, g.num_rhs_vect, l, no_threading );
+      vector_double_alloc( &(g.p.x), _INNER, g.num_rhs_vect, l, no_threading );
+      //MALLOC( g.p.b, complex_double, l->inner_vector_size );
+      //MALLOC( g.p.x, complex_double, l->inner_vector_size );
 #endif
 #endif
 #ifdef INIT_ONE_PREC
     } else {
 #endif
-      fgmres_double_struct_alloc( g.restart, g.max_restart, l->inner_vector_size, g.tol,
+      fgmres_double_struct_alloc( g.restart, g.max_restart, _INNER, g.tol,
                                   _GLOBAL_FGMRES, _RIGHT, preconditioner,
                                   g.method==6?g5D_plus_clover_double:d_plus_clover_double, &(g.p), l );
     }
@@ -178,29 +182,36 @@ void method_setup( vector_double *V, level_struct *l, struct Thread *threading )
 #ifdef INIT_ONE_PREC
     if ( g.mixed_precision == 2 ) {
 #endif
-      fgmres_MP_struct_alloc( g.restart, g.max_restart, l->inner_vector_size,
+      fgmres_MP_struct_alloc( g.restart, g.max_restart, _INNER,
                               g.tol, _NOTHING, NULL, &(g.p_MP), l );
       g.p.op = &(g.op_double);
 #if defined(INIT_ONE_PREC) && (defined (DEBUG) || defined (TEST_VECTOR_ANALYSIS))
 #ifdef HAVE_TM1p1
-      MALLOC( g.p.b, complex_double, 2*l->inner_vector_size );
-      MALLOC( g.p.x, complex_double, 2*l->inner_vector_size );
+      vector_double_alloc( &(g.p.b), _INNER, 2*g.num_rhs_vect, l, no_threading );
+      vector_double_alloc( &(g.p.x), _INNER, 2*g.num_rhs_vect, l, no_threading );
+      //MALLOC( g.p.b, complex_double, 2*l->inner_vector_size );
+      //MALLOC( g.p.x, complex_double, 2*l->inner_vector_size );
 #else
-      MALLOC( g.p.b, complex_double, l->inner_vector_size );
-      MALLOC( g.p.x, complex_double, l->inner_vector_size );
+      vector_double_alloc( &(g.p.b), _INNER, g.num_rhs_vect, l, no_threading );
+      vector_double_alloc( &(g.p.x), _INNER, g.num_rhs_vect, l, no_threading );
+      //MALLOC( g.p.b, complex_double, l->inner_vector_size );
+      //MALLOC( g.p.x, complex_double, l->inner_vector_size );
 #endif
 #endif
 #ifdef INIT_ONE_PREC
     } else {
 #endif
-      fgmres_double_struct_alloc( g.restart, g.max_restart, l->inner_vector_size, g.tol,
+      /*fgmres_double_struct_alloc( g.restart, g.max_restart, _INNER, g.tol,
                                   _GLOBAL_FGMRES, _NOTHING, NULL, d_plus_clover_double,
+                                  &(g.p), l );*/
+      fgmres_double_struct_alloc( g.restart, g.max_restart, _INNER, g.tol,
+                                  _GLOBAL_FGMRES, _NOTHING, NULL, d_plus_clover_double_new,
                                   &(g.p), l );
 #ifdef INIT_ONE_PREC
     }
 #endif
   } else if ( g.method == -1 ) {
-    fgmres_double_struct_alloc( 4, g.restart*g.max_restart, l->inner_vector_size, g.tol,
+    fgmres_double_struct_alloc( 4, g.restart*g.max_restart, _INNER, g.tol,
                                 _GLOBAL_FGMRES, _NOTHING, NULL, d_plus_clover_double, &(g.p), l );
     fine_level_double_alloc( l );
   }
@@ -361,14 +372,18 @@ void method_free( level_struct *l ) {
 #ifdef INIT_ONE_PREC
   if ( g.mixed_precision == 2 && g.method >= 0 ) {
 #endif
-    fgmres_MP_struct_free( &(g.p_MP) );
+    fgmres_MP_struct_free( &(g.p_MP), l );
 #if defined (INIT_ONE_PREC) && (defined (DEBUG) || defined (TEST_VECTOR_ANALYSIS))
 #ifdef HAVE_TM1p1
-    FREE( g.p.b, complex_double, 2*l->inner_vector_size );
-    FREE( g.p.x, complex_double, 2*l->inner_vector_size );
+    vector_double_free( &(g.p.b), l, no_threading );
+    vector_double_free( &(g.p.x), l, no_threading );
+    //FREE( g.p.b, complex_double, 2*l->inner_vector_size );
+    //FREE( g.p.x, complex_double, 2*l->inner_vector_size );
 #else
-    FREE( g.p.b, complex_double, l->inner_vector_size );
-    FREE( g.p.x, complex_double, l->inner_vector_size );
+    vector_double_free( &(g.p.b), l, no_threading );
+    vector_double_free( &(g.p.x), l, no_threading );
+    //FREE( g.p.b, complex_double, l->inner_vector_size );
+    //FREE( g.p.x, complex_double, l->inner_vector_size );
 #endif
 #endif
 #ifdef INIT_ONE_PREC
@@ -646,8 +661,8 @@ void l_init( level_struct *l ) {
 
   level_double_init( l );
   level_float_init( l );
-  
-  l->x = NULL;
+
+  vector_double_init(&(l->x));
   l->next_level = NULL;
   l->reqs = NULL;
 }
@@ -679,6 +694,7 @@ void g_init( level_struct *l ) {
   g.cur_storage = 0;
   g.max_storage = 0;
   g.in_setup = 0;
+  g.num_rhs_vect = 0;
 }
 
 void read_global_info( FILE *in ) {
@@ -1021,6 +1037,8 @@ void read_solver_parameters( FILE *in, level_struct *l ) {
   save_pt = &(g.downprop); g.downprop=1;
   read_parameter( &save_pt, "addDownPropagator:", "%d", 1, in, _DEFAULT_SET );
 #endif
+  save_pt = &(g.num_rhs_vect); g.num_rhs_vect=1;
+  read_parameter( &save_pt, "number of rhs vectors:", "%d", 1, in, _DEFAULT_SET );
   
   if ( g.randomize ) {
     srand( time( 0 ) + 1000*g.my_rank );
@@ -1085,13 +1103,6 @@ void validate_parameters( int ls, level_struct *l ) {
   int i;
   int mu;
 
-#ifdef SSE
-  if ( !g.odd_even )
-    warning0("The SSE implementation is based on the odd-even preconditioned code.\
-    \n         Switch on odd-even preconditioning in the input file.\n");
-  ASSERT( g.odd_even );
-#endif
-  
   if ( g.method == 5 && g.interpolation != 0 ) {
     warning0("Multigrid with BiCGstab smoothing is not supported.\n         Switching to FGMRES preconditioned with BiCGstab (g.interpolation=0).\n");
     g.interpolation = 0;
@@ -1115,14 +1126,6 @@ void validate_parameters( int ls, level_struct *l ) {
       ASSERT( DIVIDES( g.block_lattice[i][mu], g.local_lattice[i][mu] ) );
       ASSERT( DIVIDES( g.global_lattice[i][mu]/g.global_lattice[i+1][mu], g.local_lattice[i][mu] ) ); 
       ASSERT( DIVIDES( g.block_lattice[i][mu], g.global_lattice[i][mu]/g.global_lattice[i+1][mu] ) );
-#ifdef SSE
-      if ( g.block_lattice[i][mu] != g.global_lattice[i][mu]/g.global_lattice[i+1][mu] )
-        warning0("when using SSE, Schwarz block size and aggregate size have to match.\n");
-      ASSERT( g.block_lattice[i][mu] == g.global_lattice[i][mu]/g.global_lattice[i+1][mu] );
-      // it works everywhere but we have some problem with the vector size.
-      // TODO: check all vectora allocated with size l->inner_vector_size
-      ASSERT( g.num_eig_vect[i] % SIMD_LENGTH_float == 0 );
-#endif
     }
     
   if ( g.odd_even ) {
@@ -1161,10 +1164,6 @@ void validate_parameters( int ls, level_struct *l ) {
 
   //LIST OF CASES WHICH SHOULD WORK, BUT DO NOT (TODO)
 
-#ifdef SSE
-  ASSERT( g.mixed_precision );
-#endif
-  
   //TODO: Could work without, but you need to fix the setup phase.    
   for ( i=0; i<g.num_levels-2; i++ )
     ASSERT( g.num_eig_vect[i] <= g.num_eig_vect[i+1] );

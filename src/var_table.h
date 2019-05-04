@@ -33,18 +33,19 @@
     warning0("SCAN_VAR does not support threading, yet.\n"); \
     kind *tmp_var = (kind*)(var_pt); \
     kind signum = (start_val<end_val)?1:-1; \
-    vector_double v = NULL; \
+    vector_double v; \
+    vector_double_init(&v); \
     double norm_v = 0.0, tt0, tt1; \
     vector_double x = (g.mixed_precision==2)?g.p_MP.dp.x:g.p.x; \
     vector_double b = (g.mixed_precision==2)?g.p_MP.dp.b:g.p.b; \
     tt0 = MPI_Wtime(); \
     \
     if ( g.vt.track_error ) { \
-      MALLOC( v, complex_double, l->inner_vector_size ); \
+      vector_double_alloc( &v, _INNER, 1, l, no_threading ); \
       if (g.mixed_precision==2) fgmres_MP( &(g.p_MP), l, no_threading ); \
       else fgmres_double( &(g.p), l, no_threading ); \
-      vector_double_copy( v, x, 0, l->inner_vector_size, l ); \
-      norm_v = global_norm_double( v, 0, l->inner_vector_size, l, no_threading ); \
+      vector_double_copy( &v, &x, 0, l->inner_vector_size, l ); \
+      norm_v = global_norm_double( &v, 0, l->inner_vector_size, l, no_threading ); \
     } \
     \
     for ( *tmp_var = (kind)start_val; signum*(*tmp_var) <= signum*((kind)end_val) + EPS_double; \
@@ -68,32 +69,32 @@
         } \
         printf0("scanning variable \"%s\", value: %lf, run %d of %d\n", name, (double)(*tmp_var), i+1, g.vt.average_over ); \
         if ( g.vt.track_error ) { \
-          apply_operator_double( b, v, &(g.p), l, no_threading ); \
-          vector_double_define( x, 0, 0, l->inner_vector_size, l ); \
+          apply_operator_double( &b, &v, &(g.p), l, no_threading ); \
+          vector_double_define( &x, 0, 0, l->inner_vector_size, l ); \
           if ( g.vt.track_cgn_error ) { \
             ASSERT( g.method >=0 && g.p.restart_length >= 4 ); \
-            vector_double_define( x, 0, 0, l->inner_vector_size, l ); \
+            vector_double_define( &x, 0, 0, l->inner_vector_size, l ); \
             cgn_double( &(g.p), l, no_threading ); \
-            vector_double_minus( x, x, v, 0, l->inner_vector_size, l ); \
-            g.vt.p_end->values[_CGNR_ERR] += ( global_norm_double( x, 0, l->inner_vector_size, l, no_threading ) / norm_v ) / ((double)g.vt.average_over); \
+            vector_double_minus( &x, &x, &v, 0, l->inner_vector_size, l ); \
+            g.vt.p_end->values[_CGNR_ERR] += ( global_norm_double( &x, 0, l->inner_vector_size, l, no_threading ) / norm_v ) / ((double)g.vt.average_over); \
             printf0("CGN: error norm: %le\n", g.vt.p_end->values[_CGNR_ERR] ); \
-            vector_double_define( x, 0, 0, l->inner_vector_size, l ); \
+            vector_double_define( &x, 0, 0, l->inner_vector_size, l ); \
             } \
         } else {\
-          rhs_define( b, l, no_threading );\
+          rhs_define( &b, l, no_threading );\
         } \
-        vector_double_define( x, 0, 0, l->inner_vector_size, l ); \
+        vector_double_define( &x, 0, 0, l->inner_vector_size, l ); \
         if (g.mixed_precision==2) fgmres_MP( &(g.p_MP), l, no_threading ); \
         else fgmres_double( &(g.p), l, no_threading ); \
         if ( i == g.vt.average_over-1 ) prof_print( l ); \
         if ( g.vt.track_error ) { \
-          vector_double_minus( x, x, v, 0, l->inner_vector_size, l ); \
-          g.vt.p_end->values[_SLV_ERR] += ( global_norm_double( x, 0, l->inner_vector_size, l, no_threading ) / norm_v ) / ((double)g.vt.average_over); \
+          vector_double_minus( &x, &x, &v, 0, l->inner_vector_size, l ); \
+          g.vt.p_end->values[_SLV_ERR] += ( global_norm_double( &x, 0, l->inner_vector_size, l, no_threading ) / norm_v ) / ((double)g.vt.average_over); \
         } \
       } \
     } \
     if ( g.vt.track_error ) { \
-      FREE( v, complex_double, l->inner_vector_size ); \
+      vector_double_free( &v, l, no_threading ); \
     } \
     tt1 = MPI_Wtime(); \
     printf0("\n\ntotal time for parameter scan: %d minutes and %d seconds\n", \

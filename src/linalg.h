@@ -24,16 +24,26 @@
 
   struct Thread;
   
-  void vector_double_multi_saxpy( vector_double z, vector_double *V, complex_double *alpha,
+  void vector_double_multi_saxpy( vector_double *z, vector_double *V, complex_double *alpha,
                                int sign, int count, int start, int end, level_struct *l );
   
-  void vector_float_multi_saxpy( vector_float z, vector_float *V, complex_float *alpha,
+  void vector_float_multi_saxpy( vector_float *z, vector_float *V, complex_float *alpha,
                                  int sign, int count, int start, int end, level_struct *l );
-  
+
+  void vector_double_multi_saxpy_new( vector_double *z, vector_double *V, complex_double *alpha,
+                               int sign, int count, level_struct *l, struct Thread *threading );
+
+  void vector_float_multi_saxpy_new( vector_float *z, vector_float *V, complex_float *alpha,
+                                 int sign, int count, level_struct *l, struct Thread *threading );
+
   void process_multi_inner_product_MP( int count, complex_double *results, vector_float *phi,
-                                       vector_float psi, int start, int end, level_struct *l,
+                                       vector_float *psi, int start, int end, level_struct *l,
                                        struct Thread *threading );
-                                       
-  double global_norm_MP( vector_float x, int start, int end, level_struct *l, struct Thread *threading );
   
+  void process_multi_inner_product_MP_new( int count, complex_double *results, vector_float *phi,
+                                       vector_float *psi, level_struct *l, struct Thread *threading );
+                                     
+  double global_norm_MP( vector_float *x, int start, int end, level_struct *l, struct Thread *threading );
+
+  void global_norm_MP_new( double *res, vector_float *x, level_struct *l, struct Thread *threading );
 #endif
