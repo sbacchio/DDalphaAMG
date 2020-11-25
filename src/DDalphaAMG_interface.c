@@ -1790,7 +1790,7 @@ void DDalphaAMG_coarse_vector_free( float *vector, int level ) {
   level_struct *ltmp=&l;
   for(int i=0; i<level; i++)
     ltmp=ltmp->next_level;
-  FREE((complex_float*) vector, complex_float, ltmp->vector_size );
+  FREE(vector, float, 2*ltmp->vector_size );
 }
 
 void DDalphaAMG_coarse_vector_rand( float *vector, int level ) {
