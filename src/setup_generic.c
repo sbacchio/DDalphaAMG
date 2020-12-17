@@ -224,14 +224,10 @@ void interpolation_PRECISION_define( vector_double *V, level_struct *l, struct T
         vector_PRECISION_define_random( l->is_PRECISION.test_vector[k], 0, l->inner_vector_size, l );
         END_LOCKED_MASTER(threading)
 //       }
-      
-      smoother_PRECISION( buffer[0], NULL, l->is_PRECISION.test_vector[k], 1, _NO_RES, l, threading );
-      vector_PRECISION_copy( l->is_PRECISION.test_vector[k], buffer[0], start, end, l );
-      smoother_PRECISION( buffer[0], NULL, l->is_PRECISION.test_vector[k], g.method>=4?1:2, _NO_RES, l, threading );
-      vector_PRECISION_copy( l->is_PRECISION.test_vector[k], buffer[0], start, end, l );
-      smoother_PRECISION( buffer[0], NULL, l->is_PRECISION.test_vector[k], g.method>=4?1:3, _NO_RES, l, threading );
-      vector_PRECISION_copy( l->is_PRECISION.test_vector[k], buffer[0], start, end, l );
-        
+      for ( i = 0; i < g.post_smooth_iter[l->depth]; i++ ) {
+        smoother_PRECISION( buffer[0], NULL, l->is_PRECISION.test_vector[k], g.method>=4? 1:(i+1), _NO_RES, l, threading );
+        vector_PRECISION_copy( l->is_PRECISION.test_vector[k], buffer[0], start, end, l );
+      }
       pc += 6;
 #ifdef DEBUG
       START_MASTER(threading)

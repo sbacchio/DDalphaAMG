@@ -26,6 +26,7 @@
 #include <getopt.h>
 #include <mpi.h>
 #include <omp.h>
+#include <math.h>
 
 //library to include
 #include "DDalphaAMG.h"
@@ -33,37 +34,38 @@
 enum { T, Z, Y, X };
 #define printf0(...) do{if(rank==0)printf(__VA_ARGS__);}while(0)
 
-int rank, max_setup=0, conf_format;
-float residual=1e-9;
+int rank;
+int iters=100;
+int coarsest_local_lattice[4];
 MPI_Comm comm_cart;
 DDalphaAMG_init init;
 DDalphaAMG_parameters params;
 DDalphaAMG_status status;
-char * conf_file = "../conf/8x8x8x8b6.0000id3n1";
-char * options = "c:f:i:L:p:B:l:k:w:u:t:hr:C:K:V:m:s:S:v";
+char * options = "L:p:B:l:i:wmet:h:V:v";
+
 /*
  * Setting standard values for DDalphaAMG_init
  */
 void standard_init() {
-  init.global_lattice[T] = 8;
-  init.global_lattice[Z] = 8;
-  init.global_lattice[Y] = 8;
-  init.global_lattice[X] = 8;
+  coarsest_local_lattice[T] = 1;
+  coarsest_local_lattice[Z] = 1;
+  coarsest_local_lattice[Y] = 1;
+  coarsest_local_lattice[X] = 1;
 
   init.kappa = 0.142857143;
-  init.mu = 0.1;
-  init.csw = 1;
+  init.mu = 0.;
+  init.csw = 0.;
 
   init.bc = 1;
 
   init.number_of_levels = 3;
 
-  init.procs[T] = 2;
+  init.procs[T] = 1;
   init.procs[Z] = 1;
   init.procs[Y] = 1;
   init.procs[X] = 1;
 
-  init.number_openmp_threads = 2;
+  init.number_openmp_threads = 1;
 
   init.block_lattice[T]=2;
   init.block_lattice[Z]=2;
@@ -83,24 +85,17 @@ void help( char * arg0 ) {
   static int printed = 0;
   if(!printed) {
     printf0("\n\n");
-    printf0("Usage: %s -c <conf> [<option(s)>]\n", arg0);
-    printf0("   -c PATH      Configuration to load\n");
-    printf0("   -f #         Configuration format (0 -> DDalphaAMG, 1 -> Lime)\n");
-    printf0("   -i PATH      Input file (optional)\n");
-    printf0("   -L T Y X Z   Lattice size in each direction\n");
-    printf0("   -p T Y X Z   Processors in each direction\n");
-    printf0("   -B T Y X Z   Block size in each direction on first level.\n");
-    printf0("   -k #         kappa for the configuration\n");
-    printf0("   -w #         c_sw for the configuration\n");
-    printf0("   -u #         mu for the configuration\n");
-    printf0("   -t #         Number of OpenMp threads\n");
-    printf0("   -r #         Relative residual\n");
-    printf0("   -K #         K-cycle tolerance\n");
-    printf0("   -C #         Tolerance on coarsest grid\n");
+    printf0("Usage: %s [<option(s)>]\n", arg0);
+    printf0("   -L T Z Y X   Local lattice size on the coarsest level in each direction\n");
+    printf0("   -p T Z Y X   Processors in each direction\n");
+    printf0("   -B T Z Y X   Block size in each direction on first level. A block size of (2 2 2 2) is used for the following levels.\n");
     printf0("   -l #         Number of levels, l (from 1 to 4)\n");
-    printf0("   -V 1 [2] [3] Basis vectors between each level (l-1)\n");
-    printf0("   -m 2 [3] [4] Factor for mu on coarse levels\n");
-    printf0("   -s 1 [2] [3] Setup iterations on each level (l-1)\n");
+    printf0("   -i #         Number of iterations\n");
+    printf0("   -w           use c_sw term (without the coarse self-coupling is diagonal)\n");
+    printf0("   -m           use twisted mass term (without the coarse self-coupling is hermitian)\n");
+    printf0("   -e           use ND twisted mass term (this double the size of the vectors)\n");
+    printf0("   -t #         Number of OpenMp threads\n");
+    printf0("   -V 1 [2] [3] Basis vectors between each level (l-1 numbers)\n");
     printf0("   -v           Verbose\n");
   }
   printf0("\n\n");
@@ -116,15 +111,6 @@ void read_init_arg(int argc, char *argv[] ) {
   optind = 0;
   while ((opt = getopt(argc, argv, options)) != -1) {
     switch (opt) {
-    case 'c':
-      conf_file = optarg;
-      break;
-    case 'f':
-      conf_format = atoi(optarg);
-      break;
-    case 'i':
-      init.init_file = optarg;
-      break;
     case 'L':
       optind--;
       mu=0;
@@ -135,7 +121,7 @@ void read_init_arg(int argc, char *argv[] ) {
 	  fail++;
 	  break;
 	}
-	init.global_lattice[mu] = atoi(argv[optind]);
+	coarsest_local_lattice[mu] = atoi(argv[optind]);
 	mu++;        
       }
       if(mu < 4) {
@@ -183,14 +169,14 @@ void read_init_arg(int argc, char *argv[] ) {
     case 'l':
       init.number_of_levels = atoi(optarg);
       break;
-    case 'k':
-      init.kappa = atof(optarg);
+    case 'i':
+      iters = atoi(optarg);
       break;
     case 'w':
-      init.csw = atof(optarg);
+      init.csw = 1.;
       break;
-    case 'u':
-      init.mu = atof(optarg);
+    case 'm':
+      init.mu = 1.;
       break;
     case 't':
       init.number_openmp_threads = atoi(optarg);
@@ -202,12 +188,6 @@ void read_init_arg(int argc, char *argv[] ) {
     default: 
       break;
     }
-  }
-
-  if(conf_file == NULL) {
-    printf0("Error: configuration file is missing (use -c PATH).\n");
-    p++;
-    fail++;
   }
   
   if(p) {
@@ -224,15 +204,6 @@ void read_params_arg(int argc, char *argv[] ) {
   optind = 0;
   while ((opt = getopt(argc, argv, options)) != -1) {
     switch (opt) {
-    case 'r':
-      residual = atof(optarg);
-      break;
-    case 'K':
-      params.kcycle_tolerance = atof(optarg);
-      break;
-    case 'C':
-      params.coarse_tolerance = atof(optarg);
-      break;
     case 'V':
       optind--;
       mu=0;
@@ -247,50 +218,17 @@ void read_params_arg(int argc, char *argv[] ) {
 	mu++;        
       }
       break;
-    case 'm':
-      optind--;
-      params.mu_factor[0]=1;
-      mu=1;
-      for ( ; optind < argc && *argv[optind] != '-'; optind++){
-	if(mu > 3) {
-	  printf0("Error: too many arguments in -m.\n");
-	  p++;
-	  fail++;
-	  break;
-	}
-	params.mu_factor[mu] = atof(argv[optind]);
-	mu++;        
-      }
-      break;
-    case 's':
-      optind--;
-      mu=0;
-      for ( ; optind < argc && *argv[optind] != '-'; optind++){
-	if(mu > 2) {
-	  printf0("Error: too many arguments in -s.\n");
-	  p++;
-	  fail++;
-	  break;
-	}
-	params.setup_iterations[mu] = atoi(argv[optind]);
-	mu++;        
-      }
+    case 'e':
+      params.epsbar = 1;
       break;
     case 'v':
       params.print = 1;
       break;
-    case '?':
     default: 
       break;
     }
   }
 
-  if(conf_file == NULL) {
-    printf0("Error: configuration file is missing (use -c PATH).\n");
-    p++;
-    fail++;
-  }
-  
   if(p) {
     help(argv[0]);
     MPI_Abort(MPI_COMM_WORLD,0);
@@ -300,7 +238,6 @@ void read_params_arg(int argc, char *argv[] ) {
 }
 
 int main( int argc, char *argv[] ) {
-
   
   MPI_Init( &argc, &argv );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
@@ -308,16 +245,30 @@ int main( int argc, char *argv[] ) {
   standard_init();
   read_init_arg(argc, argv);
   
+  for(int mu=0; mu<4; mu++) {
+    init.global_lattice[mu] = coarsest_local_lattice[mu]*init.procs[mu]*init.block_lattice[mu];
+    for(int l=0; l<init.number_of_levels-2; l++) {
+      init.global_lattice[mu] *= 2;
+    }
+  }
+  printf0("global size: %d %d %d %d\n",init.global_lattice[T],init.global_lattice[X],init.global_lattice[Y],init.global_lattice[Z]);
+
   printf0("Running initialization...\n");
   DDalphaAMG_initialize( &init, &params, &status );
   printf0("Initialized %d levels in %.2f sec\n", status.success, status.time);
 
   int nlvl = status.success;
   read_params_arg(argc, argv);
-
+  
   comm_cart =  DDalphaAMG_get_communicator();
   MPI_Comm_rank( comm_cart, &rank );
 
+  // we don't want to waste time with the setup
+  for(int l=0; l<nlvl; l++) {
+    params.setup_iterations[l]=0;
+    params.smoother_iterations=0;
+  }
+  
   printf0("Running updating\n");
   DDalphaAMG_update_parameters( &params, &status );
   if (status.success)
@@ -330,18 +281,20 @@ int main( int argc, char *argv[] ) {
   double *gauge_field;
   int vol = init.global_lattice[T] * init.global_lattice[X] * init.global_lattice[Y] *
     init.global_lattice[Z] / init.procs[T] / init.procs[X] / init.procs[Y] / init.procs[Z];
-  gauge_field = (double *) malloc(18*4*vol*sizeof(double));
+  gauge_field = (double *) calloc(18*4*vol,sizeof(double));
 
-  printf0("Reading config.\n");
-  DDalphaAMG_read_configuration( gauge_field, conf_file, conf_format, &status );
-  printf0("Reading configuration time %.2f sec\n", status.time);
-  printf0("Desired plaquette %.13lf\n", status.info);
+  printf0("Using unitary config config.\n");
+  for(int i=0; i<4*vol; i++) {
+    gauge_field[i*18+0] = 1.;
+    gauge_field[i*18+8] = 1.;
+    gauge_field[i*18+16] = 1.;
+  }
       
   printf0("Setting config.\n");
   DDalphaAMG_set_configuration( gauge_field, &status );
   printf0("Setting configuration time %.2f sec\n", status.time);
   printf0("Computed plaquette %.13lf\n", status.info);
-  
+  free(gauge_field);
 
   printf0("Running setup\n");
   DDalphaAMG_setup( &status );
@@ -349,64 +302,71 @@ int main( int argc, char *argv[] ) {
 	  status.time, 100.*(status.coarse_time/status.time));
   printf0("Total iterations on fine grid %d\n", status.iter_count);
   printf0("Total iterations on coarse grids %d\n", status.coarse_iter_count);
- 
+
   /*
    * Defining fine and coarse vector randomly.
    */
-  double *vector1[nlvl], *vector2[nlvl];
-  int vols[nlvl], vars[nlvl];
-  vols[0]=vol;
-  vars[0]=3*4*2;
-
-  for ( int i=1; i<nlvl; i++ ) {
-    vols[i] = vols[i-1] / params.block_lattice[i-1][T] / params.block_lattice[i-1][X] / params.block_lattice[i-1][Y] / params.block_lattice[i-1][Z];
-    vars[i]=params.mg_basis_vectors[i-1]*2*2; // a factor of 2 is for the spin, the other for the complex
-  }
+  float *vector1[nlvl], *vector2[nlvl];
   
   for ( int i=0; i<nlvl; i++ ) {
-    vector1[i] = (double *) malloc(vars[i]*vols[i]*sizeof(double));
-    vector2[i] = (double *) malloc(vars[i]*vols[i]*sizeof(double));
+    vector1[i] = DDalphaAMG_coarse_vector_alloc(i);
+    vector2[i] = DDalphaAMG_coarse_vector_alloc(i);
+    DDalphaAMG_coarse_vector_rand(vector1[i], i);
   }
 
-  for ( int i=0; i<nlvl; i++ )
-    for ( int j=0; j<vars[i]*vols[i]; j++ )
-      vector1[i][j] = ((double)rand()/(double)RAND_MAX)-0.5;
-
-
   for ( int i=1; i<nlvl; i++ ) {
-    printf0("Testing RP=1 on level %d\n",i);
+    printf0("\nTesting RP=1 on level %d\n",i);
     DDalphaAMG_prolongate(vector2[i-1], vector1[i], i-1, &status);
     DDalphaAMG_restrict(vector2[i], vector2[i-1], i-1, &status);
 
-    double num=0, den=0;
-    for ( int j=0; j<vars[i]*vols[i]; j++ ) {
-      vector2[i][j] -= vector1[i][j];
-      num += vector2[i][j]*vector2[i][j];
-      den += vector1[i][j]*vector1[i][j];
-    }
-    printf0("Restult (1-RP)v = %e\n\n", num/den);
+    float res = DDalphaAMG_coarse_vector_residual(vector2[i], vector1[i], i);
+    printf0("Result (1-RP)v = %e\n", res);
   }
 
   for ( int i=1; i<nlvl; i++ ) {
-    printf0("Testing coarse operator on level %d\n",i);
+    printf0("\nTesting coarse operator on level %d\n",i);
+    DDalphaAMG_apply_coarse_operator(vector2[i], vector1[i], i, &status);
+
     DDalphaAMG_prolongate(vector1[i-1], vector1[i], i-1, &status);
     DDalphaAMG_apply_coarse_operator(vector2[i-1], vector1[i-1], i-1, &status);
-    DDalphaAMG_restrict(vector2[i], vector2[i-1], i-1, &status);
+    DDalphaAMG_restrict(vector1[i], vector2[i-1], i-1, &status);
 
-    DDalphaAMG_apply_coarse_operator(vector1[i], vector1[i], i, &status);
+    float res = DDalphaAMG_coarse_vector_residual(vector2[i], vector1[i], i);
+    printf0("Result (D_c-RDP)v = %e\n", res);
 
-    double num=0, den=0;
-    for ( int j=0; j<vars[i]*vols[i]; j++ ) {
-      vector2[i][j] -= vector1[i][j];
-      num += vector2[i][j]*vector2[i][j];
-      den += vector1[i][j]*vector1[i][j];
+    // restoring vector1[i]
+    DDalphaAMG_restrict(vector1[i], vector1[i-1], i-1, &status);
+  }
+
+  printf0("\nStarting bechmarks:\n");
+  for ( int i=1; i<nlvl; i++ ) {
+    double time = 0;
+    for ( int j=0; j<iters; j++ ) {
+      DDalphaAMG_prolongate(vector1[i-1], vector1[i], i-1, &status);
+      time += status.time;
     }
-    printf0("Restult (D_c-RDP)v = %e\n\n", num/den);
+    printf0("Level %d, prolongation from level %d to level %d: %e averaged over %d iters\n", i, i, i-1, time/iters, iters);
+    time = 0;
+    for ( int j=0; j<iters; j++ ) {
+      DDalphaAMG_restrict(vector1[i], vector1[i-1], i-1, &status);
+      time += status.time;
+    }
+    printf0("Level %d, restriction from level %d to level %d: %e averaged over %d iters\n", i, i-1, i, time/iters, iters);
+    time = 0;
+    for ( int j=0; j<iters; j++ ) {
+      DDalphaAMG_apply_coarse_operator(vector1[i], vector1[i], i, &status);
+      time += status.time;
+    }
+    printf0("Level %d, coarse operator on level %d: %e averaged over %d iters\n", i, i, time/iters, iters);
+  }
+
+  
+  for ( int i=0; i<nlvl; i++ ) {
+    DDalphaAMG_coarse_vector_free(vector1[i], i);
+    DDalphaAMG_coarse_vector_free(vector2[i], i);
   }
   
-  //  free(vector_in);
-  // free(vector_out);
-  //free(gauge_field);
-  //  DDalphaAMG_finalize();
+  DDalphaAMG_finalize();
   MPI_Finalize();
+  return 0;
 }

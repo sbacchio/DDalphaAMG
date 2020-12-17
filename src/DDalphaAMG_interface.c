@@ -1515,7 +1515,7 @@ static inline void DDalphaAMG_ms_driver( double **vector1_out, double *vector1_i
   
 }
 
-static inline void DDalphaAMG_proj_driver( double *vector_out, double *vector_in, int level, DDalphaAMG_status *mg_status, int _TYPE ) {
+static inline void DDalphaAMG_proj_driver( float *vector_out, float *vector_in, int level, DDalphaAMG_status *mg_status, int _TYPE ) {
   
   int t, z, y, x, i, j, mu, *ll;
 
@@ -1529,12 +1529,12 @@ static inline void DDalphaAMG_proj_driver( double *vector_out, double *vector_in
   } else if(_TYPE==_PROLONGATE) {
     from=ltmp->next_level;
     to=ltmp;    
-  } else {
-    from=ltmp->next_level;
+  } else { // includes _OPERATOR
+    from=ltmp;
     to=ltmp;    
   }
-  vector_float rhs = from->p_float.b;
-  vector_float sol = to->p_float.x;
+  vector_float in = from->p_float.b;
+  vector_float out = to->p_float.x;
 
   double t0, t1;
   t0 = MPI_Wtime();
@@ -1548,58 +1548,62 @@ static inline void DDalphaAMG_proj_driver( double *vector_out, double *vector_in
   ASSERT(vector_out!=NULL);
   ASSERT(vector_in!=NULL);
 
-  ll = from->local_lattice;
-  for (t=0, j=0; t<ll[T]; t++) 
-    for (z=0; z<ll[Z]; z++) 
-      for (y=0; y<ll[Y]; y++) 
-        for (x=0; x<ll[X]; x++) {
-          if(vector_index_fct!=NULL )
+  if(vector_index_fct!=NULL ) {
+    ll = from->local_lattice;
+    for (t=0, j=0; t<ll[T]; t++) 
+      for (z=0; z<ll[Z]; z++) 
+        for (y=0; y<ll[Y]; y++) 
+          for (x=0; x<ll[X]; x++) {
             i = vector_index_fct( t, z, y, x );
-          else 
-            i = 2*j;
           
           for ( mu=0; mu<from->num_lattice_site_var; mu++, j++ )
-            rhs[j] = ((complex_float)vector_in[i+2*mu] + I*(complex_float)vector_in[i+2*mu+1]);
-        }
+            in[j] = (vector_in[i+2*mu] + I*vector_in[i+2*mu+1]);
+          }
+  } else {
+    in = (complex_float*) vector_in;
+    out = (complex_float*) vector_out; 
+  }
 
   switch(_TYPE) {
     
   case _RESTRICT :
     THREADED(threading[0]->n_core)
-      restrict_float( sol, rhs, from, threading[omp_get_thread_num()] );
+      restrict_float( out, in, from, threading[omp_get_thread_num()] );
     break;
     
   case _PROLONGATE :
     THREADED(threading[0]->n_core)
-      interpolate3_float( sol, rhs, to, threading[omp_get_thread_num()] );
+      interpolate3_float( out, in, to, threading[omp_get_thread_num()] );
     break;
 
   case _OPERATOR :
-    THREADED(threading[0]->n_core)
-      apply_operator_float( sol, rhs, &(from->p_float), from, threading[omp_get_thread_num()] );
+    THREADED(threading[0]->n_core)          
+      if ( from->level==0 && g.odd_even )
+        coarse_odd_even_float_test( out, in, from, threading[omp_get_thread_num()] );
+      else
+        apply_operator_float( out, in, &(from->p_float), from, threading[omp_get_thread_num()] );
+
     break;
 
   default :
     warning0("_TYPE not found in DDalphaAMG_driver. Returing vector in as vector out.");
-    sol=rhs;
     break;
   }
   
-  ll = to->local_lattice;
-  for (t=0, j=0; t<ll[T]; t++) 
-    for (z=0; z<ll[Z]; z++) 
-      for (y=0; y<ll[Y]; y++) 
-        for (x=0; x<ll[X]; x++) {
-          if(vector_index_fct!=NULL )
+  if(vector_index_fct!=NULL ) {
+    ll = to->local_lattice;
+    for (t=0, j=0; t<ll[T]; t++) 
+      for (z=0; z<ll[Z]; z++) 
+        for (y=0; y<ll[Y]; y++) 
+          for (x=0; x<ll[X]; x++) {
             i = vector_index_fct( t, z, y, x );
-          else 
-            i = 2*j;
-          
-          for ( mu=0; mu<to->num_lattice_site_var; mu++, j++ ) {
-            vector_out[i+2*mu]   = (double) creal(sol[j]);
-            vector_out[i+2*mu+1] = (double) cimag(sol[j]);
+            
+            for ( mu=0; mu<to->num_lattice_site_var; mu++, j++ ) {
+              vector_out[i+2*mu]   = creal(out[j]);
+              vector_out[i+2*mu+1] = cimag(out[j]);
+            }
           }
-        }
+  }
 
     
   mg_status->success = 1;
@@ -1761,16 +1765,78 @@ void DDalphaAMG_preconditioner_doublet( double *vector1_out, double *vector1_in,
   set_n_flavours( 1 );
 }
 
-void DDalphaAMG_restrict( double *vector_out, double *vector_in, int level, DDalphaAMG_status *mg_status ) {
+void DDalphaAMG_restrict( float *vector_out, float *vector_in, int level, DDalphaAMG_status *mg_status ) {
   DDalphaAMG_proj_driver( vector_out, vector_in, level, mg_status, _RESTRICT );
 }
 
-void DDalphaAMG_prolongate( double *vector_out, double *vector_in, int level, DDalphaAMG_status *mg_status ) {
+void DDalphaAMG_prolongate( float *vector_out, float *vector_in, int level, DDalphaAMG_status *mg_status ) {
   DDalphaAMG_proj_driver( vector_out, vector_in, level, mg_status, _PROLONGATE );
 }
 
-void DDalphaAMG_apply_coarse_operator( double *vector_out, double *vector_in, int level, DDalphaAMG_status *mg_status ) {
+void DDalphaAMG_apply_coarse_operator( float *vector_out, float *vector_in, int level, DDalphaAMG_status *mg_status ) {
   DDalphaAMG_proj_driver( vector_out, vector_in, level, mg_status, _OPERATOR );
+}
+
+float* DDalphaAMG_coarse_vector_alloc( int level ) {
+  level_struct *ltmp=&l;
+  for(int i=0; i<level; i++)
+    ltmp=ltmp->next_level;
+  vector_float vector = NULL;
+  MALLOC(vector, complex_float, ltmp->vector_size );
+  return (float*) vector;
+}
+
+void DDalphaAMG_coarse_vector_free( float *vector, int level ) {
+  level_struct *ltmp=&l;
+  for(int i=0; i<level; i++)
+    ltmp=ltmp->next_level;
+  FREE(vector, float, 2*ltmp->vector_size );
+}
+
+void DDalphaAMG_coarse_vector_rand( float *vector, int level ) {
+  level_struct *ltmp=&l;
+  for(int i=0; i<level; i++)
+    ltmp=ltmp->next_level;
+
+  THREADED(threading[0]->n_core)
+  if(vector!=NULL){
+    int start, end;
+    compute_core_start_end( 0, ltmp->inner_vector_size, &start, &end, ltmp, threading[omp_get_thread_num()]);
+    vector_float_define_random( (vector_float) vector, start, end, ltmp );
+  }
+  else {
+    warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");
+  }
+}
+
+float DDalphaAMG_coarse_vector_residual( float *vector_out, float *vector_in, int level ) {
+  level_struct *ltmp=&l;
+  for(int i=0; i<level; i++)
+    ltmp=ltmp->next_level;
+
+  float norm1 = 1., norm2 = 1.;
+  THREADED(threading[0]->n_core)
+  if(vector_in!=NULL){
+    norm1 = global_norm_float( (vector_float) vector_in, 0, ltmp->inner_vector_size, ltmp, threading[omp_get_thread_num()] );
+    if(vector_out!=NULL){
+      int start, end;
+      compute_core_start_end( 0, ltmp->inner_vector_size, &start, &end, ltmp, threading[omp_get_thread_num()]);
+      vector_float_minus( (vector_float) vector_out, (vector_float) vector_out, (vector_float) vector_in, start, end, ltmp );
+    }
+  }
+  else {
+    warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");
+  }
+  if(vector_out!=NULL){
+    THREADED(threading[0]->n_core)
+    norm2 = global_norm_float( (vector_float) vector_out, 0, ltmp->inner_vector_size, ltmp, threading[omp_get_thread_num()] );
+  }
+  else {
+    warning0("Vector NULL when calling DDalphaAMG_define_vector_const!");
+    return norm1;
+  }
+
+  return norm2/norm1;
 }
 
 void DDalphaAMG_free( void ) {

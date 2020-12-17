@@ -243,7 +243,7 @@
    **   vector_out = P^\dagger * vector_in.
    **  mg_status.success = 1
    **/
-  void DDalphaAMG_restrict( double *vector_out, double *vector_in, int level,
+  void DDalphaAMG_restrict( float *vector_out, float *vector_in, int level,
                             DDalphaAMG_status *mg_status );
 
   /**
@@ -251,18 +251,27 @@
    **   vector_out = P * vector_in.
    **  mg_status.success = 1
    **/
-  void DDalphaAMG_prolongate( double *vector_out, double *vector_in, int level,
-                            DDalphaAMG_status *mg_status );
+  void DDalphaAMG_prolongate( float *vector_out, float *vector_in, int level,
+                              DDalphaAMG_status *mg_status );
 
   /**
    ** Optional - Apply the operator:
    **   vector_out = D * vector_in.
    **  mg_status.success = 1
    **/
-  void DDalphaAMG_apply_coarse_operator( double *vector_out, double *vector_in, int level,
-                                  DDalphaAMG_status *mg_status );
+  void DDalphaAMG_apply_coarse_operator( float *vector_out, float *vector_in, int level,
+                                         DDalphaAMG_status *mg_status );
 
-/*
+  /**
+   ** Extra - coarse vector utils
+   **/
+  float* DDalphaAMG_coarse_vector_alloc( int level );
+  void DDalphaAMG_coarse_vector_free( float *vector, int level );
+  void DDalphaAMG_coarse_vector_rand( float *vector, int level );
+  float DDalphaAMG_coarse_vector_residual( float *vector_out, float *vector_in, int level );
+
+
+  /*
    *  Concluding the following functions have to be call for freeing the memory and finalizing
    * the software. 
    */
@@ -376,7 +385,7 @@
      **    from 1 (no MG) to 4 (max number of levels)
      **/
     int number_of_levels;
-    
+
     /**
      **  Number of openmp threads:
      **    from 1 to omp_get_num_threads()
